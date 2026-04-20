@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM Pro — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080810; --card: #12121e; --accent: #e50914; 
+            --border: #232338; --text: #ececf4; --muted: #60607a;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; margin: 0; }
+        
+        .dashboard-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Stats Grid */
+        .stats-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; margin-bottom: 40px; 
+        }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 30px; border-radius: 16px; position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+        .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--text); margin: 10px 0; }
+
+        /* Recent Activity Table */
+        .activity-section { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 30px; }
+        .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+        td { padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14px; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono'; font-size: 11px; background: rgba(229,9,20,0.1); color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1 style="font-family: 'Bebas Neue'; font-size: 48px; letter-spacing: 2px;">SYSTEM <span style="color:var(--accent)">DASHBOARD</span></h1>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Database</div>
+            <div class="stat-value" th:text="${total}">0</div>
+            <div style="font-size: 12px; color: var(--muted)">Active Customer Records</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Acquisition (MTD)</div>
+            <div class="stat-value" th:text="${newCount}">0</div>
+            <div style="font-size: 12px; color: var(--muted)">New this month</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Demographic Avg</div>
+            <div class="stat-value" th:text="${avgAge} + 'y'">0y</div>
+            <div style="font-size: 12px; color: var(--muted)">Mean customer age</div>
+        </div>
+    </div>
+
+    <div class="activity-section">
+        <div class="section-title">Recent Entries</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>NAME</th>
+                    <th>EMAIL</th>
+                    <th>DATE</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c, iter : ${customers}" th:if="${iter.index < 5}">
+                    <td style="font-weight: 800;" th:text="${c.name}">Name</td>
+                    <td style="font-family: 'JetBrains Mono'; color: var(--muted)" th:text="${c.email}">email</td>
+                    <td th:text="${c.creationdate}">2026-04-20</td>
+                    <td><span class="badge">ACTIVE</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <a href="/Customerlist" style="color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 700;">VIEW FULL UNIVERSE →</a>
+    </div>
+</div>
+
+</body>
+</html>

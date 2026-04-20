@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Pro — Customer Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#080810;--surface:#0e0e1a;--card:#12121e;--card2:#1a1a2a;
+      --border:#232338;--accent:#e50914;--accent2:#ff5e1a;
+      --gold:#f5c518;--teal:#00d4aa;--violet:#7c5cfc;
+      --text:#ececf4;--muted:#60607a;--muted2:#9090aa;
+      --success:#00d4aa;--danger:#ff3b5c;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity:.5}
+
+    /* ── NAV ── */
+    nav{
+      position:sticky;top:0;z-index:200;height:66px;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 48px;
+      background:rgba(8,8,16,.94);backdrop-filter:blur(28px);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;background:linear-gradient(130deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted2);border:1px solid var(--border);padding:3px 8px;border-radius:4px}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+    .breadcrumb a{color:var(--accent);text-decoration:none}
+    .breadcrumb a:hover{text-decoration:underline}
+
+    /* ── BUTTONS ── */
+    .btn{
+      display:inline-flex;align-items:center;gap:7px;padding:10px 22px;
+      border-radius:8px;border:none;font-family:'Syne',sans-serif;
+      font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;
+      transition:all .2s;letter-spacing:.3px;
+    }
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(229,9,20,.3)}
+    .btn-primary:hover{background:#ff1f2c;transform:translateY(-1px);box-shadow:0 8px 30px rgba(229,9,20,.45)}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,.11)}
+    .btn-teal{background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.25)}
+    .btn-teal:hover{background:rgba(0,212,170,.2)}
+
+    /* ── LAYOUT ── */
+    .page{
+      display:grid;grid-template-columns:1fr min(660px,100%) 300px;
+      column-gap:0;padding:52px 48px 80px;
+    }
+    .form-col{grid-column:2}
+    .side-col{grid-column:3;padding-left:28px}
+
+    /* ── FORM CARD ── */
+    .form-card{
+      background:var(--card);border:1px solid var(--border);border-radius:20px;
+      overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.5);
+      animation:riseUp .45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes riseUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+    /* header */
+    .form-hd{
+      padding:36px 40px 28px;
+      background:linear-gradient(135deg,#14000a 0%,#0e0e1e 100%);
+      border-bottom:1px solid var(--border);
+      position:relative;overflow:hidden;
+    }
+    .form-hd::after{content:'';position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;
+      background:radial-gradient(circle,rgba(229,9,20,.14),transparent 65%);pointer-events:none}
+    .form-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(229,9,20,.12);color:var(--accent);
+      border:1px solid rgba(229,9,20,.28);padding:4px 13px;border-radius:20px;
+      font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px;
+    }
+    .form-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text)}
+    .form-title span{color:var(--accent)}
+    .form-sub{color:var(--muted2);font-size:13px;margin-top:6px;font-weight:400}
+
+    /* progress */
+    .prog-wrap{padding:20px 40px 0;display:flex;gap:6px}
+    .prog-step{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .4s}
+    .prog-step.on{background:var(--accent)}
+    .prog-step.done{background:var(--teal)}
+
+    /* form body */
+    .form-body{padding:32px 40px 28px}
+    .section-label{
+      font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+      color:var(--muted);margin-bottom:18px;margin-top:28px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .section-label:first-child{margin-top:0}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .row1{display:grid;grid-template-columns:1fr;gap:20px}
+    .field{margin-bottom:20px}
+    .field-lbl{
+      display:flex;align-items:center;gap:7px;
+      font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+      color:var(--muted);margin-bottom:9px;
+    }
+    .req{color:var(--accent)}
+    .inp{
+      width:100%;padding:13px 16px;
+      background:rgba(255,255,255,.04);color:var(--text);
+      border:1px solid var(--border);border-radius:10px;
+      font-family:'Syne',sans-serif;font-size:14px;font-weight:400;
+      outline:none;transition:all .2s;
+    }
+    .inp::placeholder{color:var(--muted)}
+    .inp:focus{border-color:var(--accent);background:rgba(229,9,20,.04);box-shadow:0 0 0 3px rgba(229,9,20,.1)}
+    .inp:valid:not(:placeholder-shown){border-color:rgba(0,212,170,.45)}
+    .inp.mono{font-family:'JetBrains Mono',monospace;font-size:13px}
+    .inp.invalid{border-color:var(--danger);box-shadow:0 0 0 3px rgba(255,59,92,.1)}
+    textarea.inp{resize:vertical;min-height:88px}
+
+    .hint{font-size:11px;color:var(--muted);margin-top:5px}
+    .err{font-size:11px;color:var(--danger);margin-top:5px;display:none}
+    .inp.invalid~.err{display:block}
+
+    /* age preview pill */
+    .age-pill{
+      display:inline-flex;align-items:center;gap:7px;
+      margin-top:8px;padding:5px 14px;border-radius:20px;
+      background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);
+      color:#a78bfa;font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:500;
+      opacity:0;transition:opacity .3s;
+    }
+    .age-pill.show{opacity:1}
+
+    /* today btn */
+    .today-btn{
+      background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.25);
+      padding:4px 12px;border-radius:6px;font-size:11px;font-family:'Syne',sans-serif;
+      font-weight:700;cursor:pointer;margin-top:6px;display:inline-block;
+    }
+    .today-btn:hover{background:rgba(0,212,170,.2)}
+
+    /* footer */
+    .form-ft{
+      padding:22px 40px 34px;border-top:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
+    }
+    .ft-right{display:flex;gap:10px}
+
+    /* ── SIDEBAR ── */
+    .side-card{
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      overflow:hidden;margin-bottom:18px;
+      animation:riseUp .45s .12s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .side-hd{
+      padding:14px 20px;border-bottom:1px solid var(--border);
+      font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);
+      background:rgba(255,255,255,.02);
+    }
+    .side-body{padding:18px 20px}
+    .side-body p{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:10px;font-weight:400}
+    .side-body p:last-child{margin-bottom:0}
+    .side-body strong{color:var(--text)}
+    .ql-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .ql-list li a{
+      display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;
+      text-decoration:none;color:var(--text);font-size:13px;font-weight:600;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);transition:all .18s;
+    }
+    .ql-list li a:hover{background:rgba(255,255,255,.09);transform:translateX(3px)}
+    .ql-list li a span{margin-left:auto;color:var(--muted)}
+
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+    @media(max-width:1120px){
+      .page{grid-template-columns:1fr min(660px,100%);padding:30px 20px 60px}
+      .form-col{grid-column:2}
+      .side-col{display:none}
+    }
+    @media(max-width:720px){
+      .page{grid-template-columns:1fr;padding:20px 14px 60px}
+      .form-col{grid-column:1}
+      .row2{grid-template-columns:1fr}
+      .form-hd,.form-body,.form-ft{padding-left:22px;padding-right:22px}
+      .prog-wrap{padding-left:22px;padding-right:22px}
+      nav{padding:0 20px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="brand">
+    <div class="brand-logo">CRM</div>
+    <div class="brand-tag">Pro</div>
+  </div>
+  <div class="breadcrumb">
+    <a href="/Customerlist">Customers</a>
+    <span>›</span>
+    <span th:text="${customer.id != null} ? 'Edit Customer' : 'New Customer'">New Customer</span>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- FORM COLUMN -->
+  <div class="form-col">
+    <div class="form-card">
+
+      <!-- Header -->
+      <div class="form-hd">
+        <div class="form-badge" th:text="${customer.id != null} ? '✎ EDIT MODE' : '+ NEW RECORD'">+ NEW RECORD</div>
+        <div class="form-title" th:if="${customer.id == null}">Add <span>Customer</span></div>
+        <div class="form-title" th:if="${customer.id != null}">Edit <span>Customer</span></div>
+        <p class="form-sub" th:if="${customer.id == null}">Fill in the details to register a new customer.</p>
+        <p class="form-sub" th:if="${customer.id != null}" th:text="'Updating record · ID #' + ${customer.id}">Updating record</p>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="prog-wrap">
+        <div class="prog-step" id="p1"></div>
+        <div class="prog-step" id="p2"></div>
+        <div class="prog-step" id="p3"></div>
+        <div class="prog-step" id="p4"></div>
+      </div>
+
+      <!-- FORM -->
+      <form th:action="@{/saveCustomer}" th:object="${customer}" method="post" id="cForm" onsubmit="return validate()">
+        <input type="hidden" th:field="*{id}"/>
+
+        <div class="form-body">
+
+          <!-- Section 1: Identity -->
+          <div class="section-label">Identity</div>
+          <div class="row1">
+            <div class="field">
+              <div class="field-lbl">👤 Full Name <span class="req">*</span></div>
+              <input type="text" th:field="*{name}" class="inp" id="iName"
+                     placeholder="e.g. Sumanth Kumar" 
+                     minlength="2" maxlength="50" required oninput="prog()"/>
+              <div class="err" id="eqName">Please enter a valid name (min 2 chars)</div>
+            </div>
+          </div>
+
+          <!-- Section 2: Birth & Age -->
+          <div class="section-label">Birth &amp; Age</div>
+          <div class="row2">
+            <div class="field">
+              <div class="field-lbl">🎂 Date of Birth <span class="req">*</span></div>
+              <input type="date" th:field="*{dob}" class="inp mono" id="iDob" required onchange="calcAge();prog()"/>
+              <div class="age-pill" id="agePill">🎂 Calculated Age: <strong id="calcAge">—</strong></div>
+            </div>
+            <div class="field">
+              <div class="field-lbl">🔢 Age <span class="req">*</span></div>
+              <input type="number" th:field="*{age}" class="inp mono" id="iAge"
+                     placeholder="Auto from DOB" min="0" max="130" required/>
+              <p class="hint">Auto-fills from DOB. Editable.</p>
+            </div>
+          </div>
+
+          <!-- Section 3: Contact -->
+          <div class="section-label">Contact</div>
+          <div class="row2">
+            <div class="field">
+              <div class="field-lbl">✉️ Email <span class="req">*</span></div>
+              <input type="email" th:field="*{email}" class="inp mono" id="iEmail"
+                     placeholder="user@example.com" required oninput="prog()"/>
+              <div class="err" id="eEmail">Enter a valid email address.</div>
+            </div>
+            <div class="field">
+              <div class="field-lbl">📱 Mobile <span class="req">*</span></div>
+              <input type="tel" th:field="*{mobile}" class="inp mono" id="iMob"
+                     placeholder="9876543210" maxlength="10" required
+                     oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);prog()"/>
+              <div class="err" id="eMob">Enter a valid 10-digit mobile number.</div>
+            </div>
+          </div>
+
+          <!-- Section 4: Address & Creation Date -->
+          <div class="section-label">Location &amp; Record</div>
+          <div class="row1">
+            <div class="field">
+              <div class="field-lbl">📍 Address <span class="req">*</span></div>
+              <textarea th:field="*{address}" class="inp" id="iAddr"
+                        placeholder="e.g. 12, MG Road, Bengaluru, Karnataka - 560001"
+                        rows="3" minlength="10" maxlength="250"
+                        required
+                        oninput="prog()"></textarea>
+              <p class="hint">Full postal address — optional but recommended.</p>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <div class="field-lbl">📅 Creation Date <span class="req">*</span></div>
+              <input type="text" th:field="*{creationdate}" class="inp mono" id="iCdate"
+                     placeholder="e.g. 2024-04-20" required/>
+              <button type="button" class="today-btn" onclick="setToday()">Set Today</button>
+              <p class="hint">Date this record was registered.</p>
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+              <!-- Visual record status indicator -->
+              <div style="
+                width:100%;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);
+                border-radius:10px;padding:16px 18px;
+              ">
+                <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Status</div>
+                <div th:if="${customer.id == null}" style="font-size:14px;font-weight:700;color:var(--teal);">🟢 New Record</div>
+                <div th:if="${customer.id != null}" style="font-size:14px;font-weight:700;color:var(--gold);">✎ Editing #<span th:text="${customer.id}">001</span></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="formCompleteness">—</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /form-body -->
+
+        <!-- Footer -->
+        <div class="form-ft">
+          <a href="/Customerlist" class="btn btn-ghost">← Cancel</a>
+          <div class="ft-right">
+            <button type="reset" class="btn btn-ghost" onclick="resetForm()">↺ Reset</button>
+            <button type="submit" class="btn btn-primary" id="subBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span th:text="${customer.id != null} ? 'Update Customer' : 'Save Customer'">Save Customer</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div><!-- /form-card -->
+  </div><!-- /form-col -->
+
+  <!-- SIDEBAR -->
+  <div class="side-col">
+    <div class="side-card">
+      <div class="side-hd">Quick Tips</div>
+      <div class="side-body">
+        <p>Enter <strong>Date of Birth</strong> and age is auto-calculated.</p>
+        <p><strong>Mobile</strong> must be exactly 10 digits — letters are blocked automatically.</p>
+        <p><strong>Address</strong> field supports full multi-line postal addresses.</p>
+        <p>Use <strong>"Set Today"</strong> to stamp the creation date as the current date.</p>
+      </div>
+    </div>
+    <div class="side-card">
+      <div class="side-hd">Quick Links</div>
+      <div class="side-body" style="padding:12px 14px">
+        <ul class="ql-list">
+          <li><a href="/Customerlist">☰ All Customers <span>›</span></a></li>
+          <li><a href="/exportCustomers">↓ Export CSV <span>›</span></a></li>
+          <li><a href="/dashboard">⊞ Dashboard <span>›</span></a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  /* ── Calc age from DOB ── */
+  function calcAge() {
+    const dob = document.getElementById('iDob').value;
+    if(!dob) return;
+    const b = new Date(dob), now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if(m<0 || (m===0 && now.getDate()<b.getDate())) age--;
+    document.getElementById('iAge').value = age;
+    document.getElementById('calcAge').textContent = age;
+    document.getElementById('agePill').classList.add('show');
+  }
+
+  /* ── Set today's date ── */
+  function setToday() {
+    const d = new Date();
+    const s = d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'))+'-'+(String(d.getDate()).padStart(2,'0'));
+    document.getElementById('iCdate').value = s;
+    prog();
+  }
+
+  /* ── Progress bar ── */
+  function prog() {
+    const n  = document.getElementById('iName').value.trim();
+    const e  = document.getElementById('iEmail').value.trim();
+    const mb = document.getElementById('iMob').value.trim();
+    const ad = document.getElementById('iAddr').value.trim();
+    document.getElementById('p1').className = 'prog-step ' + (n.length>=2?'done':'on');
+    document.getElementById('p2').className = 'prog-step ' + (e.includes('@')?'done':'');
+    document.getElementById('p3').className = 'prog-step ' + (mb.length===10?'done':'');
+    document.getElementById('p4').className = 'prog-step ' + (ad.length>3?'done':'');
+    const filled = [n.length>=2, e.includes('@'), mb.length===10, ad.length>3].filter(Boolean).length;
+    const pct = Math.round((filled/4)*100);
+    document.getElementById('formCompleteness').textContent = pct+'% fields completed';
+  }
+
+  /* ── Validate ── */
+  function validate() {
+    let ok = true;
+    const name = document.getElementById('iName');
+    const email = document.getElementById('iEmail');
+    const mob = document.getElementById('iMob');
+    const clr = (el,valid) => { el.classList.toggle('invalid',!valid); return valid; };
+    if(!clr(name, name.value.trim().length>=2)) ok=false;
+    if(!clr(email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))) ok=false;
+    if(!clr(mob, /^\d{10}$/.test(mob.value.trim()))) ok=false;
+    if(!ok) {
+      const sub = document.getElementById('subBtn');
+      sub.style.opacity='.5';
+      setTimeout(()=>sub.style.opacity='1',700);
+    }
+    return ok;
+  }
+
+  /* ── Reset ── */
+  function resetForm() {
+    document.getElementById('agePill').classList.remove('show');
+    ['iName','iEmail','iMob'].forEach(id=>document.getElementById(id).classList.remove('invalid'));
+    ['p1','p2','p3','p4'].forEach(id=>document.getElementById(id).className='prog-step');
+    document.getElementById('formCompleteness').textContent='—';
+  }
+
+  /* ── Init ── */
+  window.addEventListener('DOMContentLoaded', () => {
+    const age = document.getElementById('iAge').value;
+    if(age) { document.getElementById('calcAge').textContent = age; document.getElementById('agePill').classList.add('show'); }
+    prog();
+  });
+</script>
+</body>
+</html>

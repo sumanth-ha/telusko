@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'CRM Pro — ' + ${customer.name}">CRM Pro — Customer Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #07070d;
+      --surface:   #0f0f18;
+      --card:      #13131e;
+      --card2:     #18182a;
+      --border:    #252538;
+      --accent:    #e50914;
+      --accent2:   #ff6b35;
+      --gold:      #f5c518;
+      --teal:      #00c9b1;
+      --violet:    #7c3aed;
+      --text:      #eeeef5;
+      --muted:     #64647a;
+      --muted2:    #9494aa;
+      --success:   #00c896;
+      --danger:    #ff3b5c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 44px;
+      background: rgba(7,7,13,.92);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,.055);
+    }
+    .nav-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 27px; letter-spacing: 3px;
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-brand sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 300; letter-spacing: 1px;
+      -webkit-text-fill-color: var(--muted2); margin-left: 6px;
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+    }
+    .breadcrumb a { color: var(--accent); text-decoration: none; transition: opacity .2s; }
+    .breadcrumb a:hover { opacity: .75; }
+    .breadcrumb .sep { color: var(--border); }
+    .nav-actions { display: flex; gap: 10px; }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 7px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; letter-spacing: .3px;
+      transition: all .2s ease; white-space: nowrap;
+    }
+    .btn svg { flex-shrink: 0; }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 18px rgba(229,9,20,.3); }
+    .btn-primary:hover { background: #ff1f2c; transform: translateY(-1px); box-shadow: 0 7px 28px rgba(229,9,20,.45); }
+    .btn-gold { background: rgba(245,197,24,.12); color: var(--gold); border: 1px solid rgba(245,197,24,.28); }
+    .btn-gold:hover { background: rgba(245,197,24,.22); transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+    .btn-danger { background: rgba(255,59,92,.1); color: var(--danger); border: 1px solid rgba(255,59,92,.28); }
+    .btn-danger:hover { background: rgba(255,59,92,.2); }
+    .btn-sm { padding: 7px 15px; font-size: 12px; }
+
+    /* ─── HERO BANNER ─── */
+    .hero-banner {
+      position: relative; overflow: hidden;
+      height: 260px;
+      background: linear-gradient(135deg, #0c0010 0%, #12000a 40%, #080814 80%, #07070d 100%);
+    }
+    /* Animated gradient orbs */
+    .hero-banner::before {
+      content: '';
+      position: absolute; left: -120px; top: -120px;
+      width: 520px; height: 520px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(229,9,20,.18) 0%, transparent 65%);
+      animation: orb1 8s ease-in-out infinite alternate;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute; right: -80px; bottom: -100px;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,58,237,.14) 0%, transparent 65%);
+      animation: orb2 10s ease-in-out infinite alternate;
+    }
+    @keyframes orb1 { to { transform: translate(60px, 40px) scale(1.1); } }
+    @keyframes orb2 { to { transform: translate(-40px, -30px) scale(1.15); } }
+
+    /* grid-line decoration */
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ─── PROFILE CARD (overlaps hero) ─── */
+    .profile-wrapper {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 44px;
+      position: relative;
+    }
+    .profile-card {
+      position: relative; z-index: 10;
+      margin-top: -96px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 40px 32px;
+      display: flex; align-items: flex-end; gap: 32px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.55);
+      animation: riseUp .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Big avatar */
+    .big-avatar {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: #fff;
+      flex-shrink: 0;
+      border: 4px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--accent), 0 12px 32px rgba(229,9,20,.4);
+      position: relative;
+    }
+    .online-dot {
+      position: absolute; bottom: 4px; right: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--success); border: 2px solid var(--bg);
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-id {
+      font-size: 11px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 6px;
+    }
+    .profile-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(30px, 4vw, 50px);
+      letter-spacing: 1.5px; line-height: 1; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-meta {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .meta-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      color: var(--muted2);
+    }
+    .meta-chip.teal { background: rgba(0,201,177,.1); border-color: rgba(0,201,177,.25); color: var(--teal); }
+    .meta-chip.gold { background: rgba(245,197,24,.1); border-color: rgba(245,197,24,.25); color: var(--gold); }
+
+    .profile-actions { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+    /* ─── BODY GRID ─── */
+    .body-grid {
+      max-width: 1100px; margin: 0 auto;
+      padding: 32px 44px 80px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+
+    /* ─── SECTION TITLE ─── */
+    .section-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ─── DETAIL CARD ─── */
+    .detail-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      animation: fadeSlide .4s ease both;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .detail-card:nth-child(2) { animation-delay: .07s; }
+    .detail-card:nth-child(3) { animation-delay: .14s; }
+
+    .detail-card-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,.02);
+    }
+    .detail-card-header .icon {
+      font-size: 18px;
+    }
+    .detail-card-header h3 {
+      font-size: 13px; font-weight: 600; letter-spacing: .5px;
+      color: var(--text);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .detail-item {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      border-right: 1px solid rgba(255,255,255,.04);
+      transition: background .15s;
+    }
+    .detail-item:hover { background: rgba(255,255,255,.025); }
+    .detail-item:nth-child(even) { border-right: none; }
+    .detail-item.full {
+      grid-column: span 2; border-right: none;
+    }
+    .detail-item:last-child, .detail-item:nth-last-child(2):not(.full) {
+      border-bottom: none;
+    }
+    .di-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .di-value {
+      font-size: 15px; font-weight: 500; color: var(--text);
+    }
+    .di-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+    .di-value.big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px; letter-spacing: 1px; line-height: 1;
+      color: var(--text);
+    }
+    .di-value .accent { color: var(--accent); }
+    .di-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* Age ring */
+    .age-ring-wrap {
+      display: flex; align-items: center; gap: 20px;
+    }
+    .ring-svg { flex-shrink: 0; }
+    .ring-bg  { fill: none; stroke: var(--border); stroke-width: 6; }
+    .ring-fill { fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round;
+      stroke-dasharray: 226; stroke-dashoffset: 226;
+      transform: rotate(-90deg); transform-origin: 50% 50%;
+      transition: stroke-dashoffset 1.2s cubic-bezier(.25,.46,.45,.94);
+    }
+    .ring-text {
+      font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+      fill: var(--text); text-anchor: middle; dominant-baseline: central;
+    }
+    .ring-sublabel { font-size: 8px; fill: var(--muted); text-anchor: middle; }
+
+    /* Email / mobile copyable */
+    .copyable {
+      display: inline-flex; align-items: center; gap: 8px;
+      cursor: pointer; border-radius: 6px; padding: 2px 6px;
+      margin: -2px -6px;
+      transition: background .15s;
+    }
+    .copyable:hover { background: rgba(255,255,255,.07); }
+    .copy-icon { opacity: 0; transition: opacity .15s; font-size: 12px; }
+    .copyable:hover .copy-icon { opacity: .6; }
+    .copied-flash { font-size: 11px; color: var(--success); display: none; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    .side-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      animation: fadeSlide .4s .2s ease both;
+    }
+    .side-card-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+    .side-card-body { padding: 20px 22px; }
+
+    /* Quick actions list */
+    .action-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .action-list li a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .action-list li a:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
+    .action-list li a .a-icon { font-size: 16px; width: 28px; text-align: center; }
+    .action-list li a .a-arr { margin-left: auto; color: var(--muted); font-size: 16px; }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .tl-item {
+      display: flex; gap: 14px; padding-bottom: 20px;
+      position: relative;
+    }
+    .tl-item::before {
+      content: ''; position: absolute; left: 15px; top: 28px; bottom: 0; width: 1px;
+      background: var(--border);
+    }
+    .tl-item:last-child::before { display: none; }
+    .tl-dot {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; border: 1px solid var(--border);
+      background: var(--card2); z-index: 1;
+    }
+    .tl-dot.red   { background: rgba(229,9,20,.15); border-color: rgba(229,9,20,.3); }
+    .tl-dot.teal  { background: rgba(0,201,177,.1);  border-color: rgba(0,201,177,.25); }
+    .tl-dot.gold  { background: rgba(245,197,24,.1); border-color: rgba(245,197,24,.25); }
+    .tl-content {}
+    .tl-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .tl-time  { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── DANGER ZONE ─── */
+    .danger-zone {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 44px 80px;
+    }
+    .danger-card {
+      background: rgba(255,59,92,.04);
+      border: 1px solid rgba(255,59,92,.2);
+      border-radius: 14px; padding: 26px 30px;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .danger-icon { font-size: 32px; flex-shrink: 0; }
+    .danger-text h4 { font-size: 14px; font-weight: 600; color: var(--danger); margin-bottom: 4px; }
+    .danger-text p  { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .danger-btn { margin-left: auto; }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav, .profile-wrapper, .body-grid, .danger-zone { padding-left: 20px; padding-right: 20px; }
+      .body-grid { grid-template-columns: 1fr; }
+      .profile-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+      .profile-actions { width: 100%; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .detail-item { border-right: none; }
+      .detail-item.full { grid-column: span 1; }
+    }
+    @media (max-width: 560px) {
+      .profile-name { font-size: 28px; }
+      .danger-card { flex-direction: column; align-items: flex-start; }
+      .danger-btn { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <div class="nav-brand">CRM<sub>PRO</sub></div>
+  <div class="breadcrumb">
+    <a href="/Customerlist">Customers</a>
+    <span class="sep">›</span>
+    <span th:text="${customer.name}">Profile</span>
+  </div>
+  <div class="nav-actions">
+    <a th:href="@{/updateCustomer(id=${customer.id})}" class="btn btn-gold btn-sm">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
+    </a>
+    <a href="/Customerlist" class="btn btn-ghost btn-sm">
+      ← Back
+    </a>
+  </div>
+</nav>
+
+<!-- ─── HERO BANNER ─── -->
+<div class="hero-banner">
+  <div class="hero-grid"></div>
+</div>
+
+<!-- ─── PROFILE CARD ─── -->
+<div class="profile-wrapper">
+  <div class="profile-card">
+    <div class="big-avatar" th:text="${#strings.toUpperCase(#strings.substring(customer.name,0,1))}">
+      A
+      <div class="online-dot"></div>
+    </div>
+    <div class="profile-info">
+      <div class="profile-id" th:text="'CUSTOMER · #' + ${customer.id}">CUSTOMER · #001</div>
+      <div class="profile-name" th:text="${customer.name}">Sumanth Kumar</div>
+      <div class="profile-meta">
+        <span class="meta-chip teal">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span th:text="${customer.email}">email@example.com</span>
+        </span>
+        <span class="meta-chip gold">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.82a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .91h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+          <span th:text="${customer.mobile}">9876543210</span>
+        </span>
+        <span class="meta-chip">
+          🎂 <span th:text="${customer.age} + ' yrs'">30 yrs</span>
+        </span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <a th:href="@{/updateCustomer(id=${customer.id})}" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Customer
+      </a>
+      <button class="btn btn-ghost" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── BODY GRID ─── -->
+<div class="body-grid">
+
+  <!-- ── LEFT: Details ── -->
+  <div class="main-col">
+
+    <!-- Personal Info -->
+    <div class="section-title">Personal Information</div>
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <span class="icon">👤</span>
+        <h3>Identity Details</h3>
+      </div>
+      <div class="detail-grid">
+
+        <div class="detail-item">
+          <div class="di-label">Full Name</div>
+          <div class="di-value" th:text="${customer.name}">Sumanth Kumar</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="di-label">Customer ID</div>
+          <div class="di-value mono" th:text="'#' + ${customer.id}">#001</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="di-label">Date of Birth</div>
+          <div class="di-value mono" th:text="${customer.dob}">1994-06-15</div>
+          <div class="di-sub" id="dobSub">Calculating…</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="di-label">Age</div>
+          <div class="age-ring-wrap">
+            <svg class="ring-svg" width="68" height="68" viewBox="0 0 80 80">
+              <circle class="ring-bg"   cx="40" cy="40" r="36"/>
+              <circle class="ring-fill" cx="40" cy="40" r="36" id="ageRing"/>
+              <text class="ring-text"   x="40" y="39" th:text="${customer.age}">30</text>
+              <text class="ring-sublabel" x="40" y="52">YRS</text>
+            </svg>
+            <div>
+              <div class="di-value big" th:text="${customer.age}">30</div>
+              <div class="di-sub">Years old</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="section-title">Contact Information</div>
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <span class="icon">📡</span>
+        <h3>Reachability</h3>
+      </div>
+      <div class="detail-grid">
+
+        <div class="detail-item full">
+          <div class="di-label">Email Address</div>
+          <div class="di-value mono">
+            <span class="copyable" th:attr="data-copy=${customer.email}" onclick="copyText(this)">
+              <span th:text="${customer.email}">user@example.com</span>
+              <span class="copy-icon">⎘</span>
+              <span class="copied-flash" id="emailFlash">Copied!</span>
+            </span>
+          </div>
+          <div class="di-sub">Primary email — click to copy</div>
+        </div>
+
+        <div class="detail-item full">
+          <div class="di-label">Mobile Number</div>
+          <div class="di-value mono">
+            <span class="copyable" th:attr="data-copy=${customer.mobile}" onclick="copyText(this)">
+              <span th:text="${customer.mobile}">9876543210</span>
+              <span class="copy-icon">⎘</span>
+              <span class="copied-flash" id="mobileFlash">Copied!</span>
+            </span>
+          </div>
+          <div class="di-sub">10-digit number — click to copy</div>
+        </div>
+
+      </div>
+    </div>
+<div class="section-title">Location &amp; Record</div>
+<div class="detail-card">
+  <div class="det-hd">
+    <span class="det-hd-icon">📍</span>
+    <h3>Address &amp; Registration</h3>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-item full">
+      <div class="di-label">Full Address</div>
+      <div class="di-value" th:text="${customer.address != null and !#strings.isEmpty(customer.address)} ? ${customer.address} : 'No address on record.'">
+        Bengaluru
+      </div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Creation Date</div>
+      <div class="di-value mono" th:text="${customer.creationdate != null} ? ${customer.creationdate} : '—'">
+        2024-04-20
+      </div>
+      <div class="di-sub">System generated date</div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Record Status</div>
+      <div style="margin-top:4px">
+        <span class="meta-chip teal" style="font-size:12px;">● Active</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div><!-- /main-col -->
+
+  <!-- ── RIGHT: Sidebar ── -->
+  <div class="sidebar">
+
+    <!-- Quick Actions -->
+    <div class="side-card">
+      <div class="side-card-header">Quick Actions</div>
+      <div class="side-card-body" style="padding:14px 16px;">
+        <ul class="action-list">
+          <li>
+            <a th:href="@{/updateCustomer(id=${customer.id})}">
+              <span class="a-icon">✎</span> Edit This Customer
+              <span class="a-arr">›</span>
+            </a>
+          </li>
+          <li>
+            <a href="/showCustomerForm">
+              <span class="a-icon">＋</span> Add New Customer
+              <span class="a-arr">›</span>
+            </a>
+          </li>
+          <li>
+            <a href="/Customerlist">
+              <span class="a-icon">☰</span> All Customers
+              <span class="a-arr">›</span>
+            </a>
+          </li>
+          <li>
+            <a href="/exportCustomers">
+              <span class="a-icon">↓</span> Export CSV
+              <span class="a-arr">›</span>
+            </a>
+          </li>
+          <li>
+            <a href="/dashboard">
+              <span class="a-icon">⊞</span> Dashboard
+              <span class="a-arr">›</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="side-card">
+      <div class="side-card-header">Activity Timeline</div>
+      <div class="side-card-body">
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot red">👁</div>
+            <div class="tl-content">
+              <div class="tl-title">Profile Viewed</div>
+              <div class="tl-time" id="viewTime">Just now</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot teal">✓</div>
+            <div class="tl-content">
+              <div class="tl-title">Record Active</div>
+              <div class="tl-time">System status</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot gold">★</div>
+            <div class="tl-content">
+              <div class="tl-title">Customer Since</div>
+              <div class="tl-time" id="custSince">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Record Summary -->
+    <div class="side-card">
+      <div class="side-card-header">Record Summary</div>
+      <div class="side-card-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="di-label">Record ID</div>
+          <div class="di-value mono" style="font-size:13px;" th:text="'CRM-' + ${#strings.length(customer.id.toString()) < 4 ? #strings.concat('000', customer.id.toString()) : customer.id.toString()}">CRM-0001</div>
+        </div>
+        <div>
+          <div class="di-label">Status</div>
+          <span class="meta-chip teal" style="font-size:11px;">● Active</span>
+        </div>
+        <div>
+          <div class="di-label">Data Completeness</div>
+          <div style="margin-top:6px;">
+            <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;">
+              <div id="completenessBar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;width:0%;transition:width 1s ease;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px;" id="completenessLabel">Calculating…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+</div><!-- /body-grid -->
+
+<!-- ─── DANGER ZONE ─── -->
+<div class="danger-zone">
+  <div class="section-title" style="margin-bottom:16px;">Danger Zone</div>
+  <div class="danger-card">
+    <div class="danger-icon">⚠️</div>
+    <div class="danger-text">
+      <h4>Delete This Customer</h4>
+      <p>Permanently remove <strong th:text="${customer.name}" style="color:var(--text);">this customer</strong> and all associated data from the system. This action is irreversible.</p>
+    </div>
+    <div class="danger-btn">
+      <button class="btn btn-danger" onclick="openDeleteModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Delete Customer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DELETE MODAL ─── -->
+<div id="deleteModal" style="
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+">
+  <div style="
+    background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:40px 44px;width:440px;max-width:90vw;
+    transform:scale(.92);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 48px 120px rgba(0,0,0,.7);
+  " id="modalBox">
+    <div style="font-size:48px;margin-bottom:18px;text-align:center;">🗑️</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.5px;text-align:center;margin-bottom:10px;">Confirm Deletion</div>
+    <p style="color:var(--muted);font-size:14px;text-align:center;line-height:1.65;margin-bottom:30px;">
+      You are about to permanently delete<br/>
+      <strong th:text="${customer.name}" style="color:var(--text);font-size:16px;">this customer</strong><br/>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);" th:text="'ID: #' + ${customer.id}">ID: #001</span>
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <a th:href="@{/deleteCustomer(id=${customer.id})}" class="btn btn-danger">
+        Delete Permanently
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ─── Modal ─── */
+  function openDeleteModal() {
+    const m = document.getElementById('deleteModal');
+    m.style.opacity = '1'; m.style.pointerEvents = 'all';
+    document.getElementById('modalBox').style.transform = 'scale(1)';
+  }
+  function closeDeleteModal() {
+    const m = document.getElementById('deleteModal');
+    m.style.opacity = '0'; m.style.pointerEvents = 'none';
+    document.getElementById('modalBox').style.transform = 'scale(.92)';
+  }
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+
+  /* ─── Copy to clipboard ─── */
+  function copyText(el) {
+    const val = el.getAttribute('data-copy');
+    navigator.clipboard.writeText(val).then(() => {
+      const flash = el.querySelector('.copied-flash');
+      if (flash) { flash.style.display = 'inline'; setTimeout(() => flash.style.display = 'none', 1800); }
+    });
+  }
+
+  /* ─── Age ring animation ─── */
+  window.addEventListener('DOMContentLoaded', () => {
+    const ring = document.getElementById('ageRing');
+    const ageEl = document.querySelector('.di-value.big');
+    const age = parseInt(ageEl?.textContent || '0');
+    const maxAge = 100;
+    const circumference = 226;
+    const pct = Math.min(age / maxAge, 1);
+    setTimeout(() => {
+      ring.style.strokeDashoffset = circumference - pct * circumference;
+    }, 300);
+
+    /* ─── DOB relative label ─── */
+    const dobCell = document.querySelector('.di-value.mono');
+    const dobEl = document.querySelectorAll('.di-value.mono')[0];
+    const dobStr = dobEl?.textContent?.trim();
+    if (dobStr) {
+      try {
+        const dob = new Date(dobStr);
+        const now = new Date();
+        const nextBday = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+        if (nextBday < now) nextBday.setFullYear(now.getFullYear() + 1);
+        const daysLeft = Math.ceil((nextBday - now) / 86400000);
+        document.getElementById('dobSub').textContent = daysLeft === 0
+          ? '🎉 Birthday today!'
+          : `Birthday in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+      } catch(e) { document.getElementById('dobSub').textContent = ''; }
+    }
+
+    /* ─── View time ─── */
+    document.getElementById('viewTime').textContent =
+      new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    /* ─── Customer since (mock — based on ID) ─── */
+    document.getElementById('custSince').textContent = 'Record #' +
+      (document.querySelector('.di-value.mono')?.textContent?.replace('#','') || '—');
+
+    /* ─── Data completeness ─── */
+    const fields = ['name','dob','age','email','mobile'];
+    let filled = 0;
+    document.querySelectorAll('.di-value').forEach((el, i) => {
+      if (el.textContent.trim() && el.textContent.trim() !== '—') filled++;
+    });
+    const pctFill = Math.min(Math.round((filled / 8) * 100), 100);
+    const finalPct = pctFill >= 80 ? 100 : pctFill;
+    setTimeout(() => {
+      document.getElementById('completenessBar').style.width = finalPct + '%';
+      document.getElementById('completenessLabel').textContent = finalPct + '% complete — All fields filled';
+    }, 500);
+  });
+</script>
+</body>
+</html>
