@@ -16,7 +16,9 @@ import jakarta.persistence.Id;
 public class Customer {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	//@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cust_seq")
+	@SequenceGenerator(name = "cust_seq", sequenceName = "customer_sequence", allocationSize = 1)
 	private Integer id;
 	private String name;
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
