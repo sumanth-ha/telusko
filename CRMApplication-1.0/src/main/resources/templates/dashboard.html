@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Pro — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#080810;--surface:#0e0e1a;--card:#12121e;--card2:#1a1a2a;
+      --border:#232338;--accent:#e50914;--accent2:#ff5e1a;
+      --gold:#f5c518;--teal:#00d4aa;--violet:#7c5cfc;
+      --text:#ececf4;--muted:#60607a;--muted2:#9090aa;
+      --success:#00d4aa;--danger:#ff3b5c;
+    }
+    [data-theme="light"]{
+      --bg:#f0f0f8;--surface:#e8e8f2;--card:#ffffff;--card2:#f5f5ff;
+      --border:#d0d0e4;--text:#111128;--muted:#8080b0;--muted2:#5555a0;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;transition:background .3s,color .3s}
+    body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:.4}
+
+    nav{position:sticky;top:0;z-index:200;height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,8,16,.94);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.05);transition:background .3s}
+    [data-theme="light"] nav{background:rgba(240,240,248,.96);border-bottom:1px solid var(--border)}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;background:linear-gradient(130deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted2);border:1px solid var(--border);padding:3px 8px;border-radius:4px}
+    .nav-links{display:flex;gap:4px}
+    .nav-link{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;text-decoration:none;color:var(--muted2);font-size:13px;font-weight:600;transition:all .2s;border:1px solid transparent}
+    .nav-link:hover,.nav-link.active{color:var(--text);background:rgba(229,9,20,.08);border-color:rgba(229,9,20,.2)}
+    .nav-link.active{color:var(--accent)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .theme-btn{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 13px;cursor:pointer;font-size:12px;font-weight:700;color:var(--muted2);transition:all .2s;font-family:'Syne',sans-serif}
+    .theme-btn:hover{background:var(--card2);color:var(--text)}
+    .ttrack{width:34px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background .3s}
+    [data-theme="light"] .ttrack{background:var(--accent)}
+    .tthumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+    [data-theme="light"] .tthumb{transform:translateX(16px)}
+
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(229,9,20,.3)}
+    .btn-primary:hover{background:#ff1f2c;transform:translateY(-1px)}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,.11)}
+    [data-theme="light"] .btn-ghost{background:rgba(0,0,0,.05)}
+    [data-theme="light"] .btn-ghost:hover{background:rgba(0,0,0,.1)}
+    .btn-sm{padding:7px 14px;font-size:12px}
+
+    .page{max-width:1280px;margin:0 auto;padding:36px 48px 80px}
+    .pg-eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+    .pg-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,58px);letter-spacing:2px;color:var(--text);line-height:1}
+    .pg-title em{color:var(--accent);font-style:normal}
+    .pg-sub{color:var(--muted2);font-size:14px;margin-top:8px;font-weight:400}
+    .pg-acts{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+    /* KPI */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:28px 0}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;animation:fadeUp .4s ease both}
+    .kpi:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,.22)}
+    .kpi:nth-child(1){animation-delay:.04s}.kpi:nth-child(2){animation-delay:.08s}.kpi:nth-child(3){animation-delay:.12s}.kpi:nth-child(4){animation-delay:.16s}
+    .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .kpi:nth-child(1)::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    .kpi:nth-child(2)::before{background:linear-gradient(90deg,var(--teal),#00a8ff)}
+    .kpi:nth-child(3)::before{background:linear-gradient(90deg,var(--gold),#ffa800)}
+    .kpi:nth-child(4)::before{background:linear-gradient(90deg,var(--violet),#c084fc)}
+    .kpi-icon{font-size:22px;margin-bottom:10px}
+    .kpi-label{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .kpi-val{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;color:var(--text)}
+    .kpi-note{font-size:11px;color:var(--muted);margin-top:4px}
+
+    /* Charts */
+    .charts-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+    .charts-1{margin-bottom:18px}
+    .charts-2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;animation:fadeUp .4s .1s ease both}
+    .ch-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:10px}
+    .ch-title{font-size:14px;font-weight:700;color:var(--text)}
+    .ch-sub{font-size:11px;color:var(--muted);margin-top:2px;font-weight:400}
+    .ch-badge{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(229,9,20,.1);color:var(--accent);border:1px solid rgba(229,9,20,.25);flex-shrink:0}
+
+    /* Dist bars */
+    .dist-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    [data-theme="light"] .dist-row{border-bottom:1px solid var(--border)}
+    .dist-row:last-child{border-bottom:none}
+    .dist-lbl{font-size:12px;font-weight:600;color:var(--muted2);width:56px;flex-shrink:0}
+    .dist-bw{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+    .dist-b{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1.2s cubic-bezier(.25,.46,.45,.94)}
+    .dist-cnt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:24px;text-align:right;flex-shrink:0}
+
+    /* Recent table */
+    .recent-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .4s .25s ease both}
+    .rec-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .rec-hd h3{font-size:14px;font-weight:700;color:var(--text)}
+    table{width:100%;border-collapse:collapse}
+    th{padding:12px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+    th:first-child{padding-left:22px}
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.038);transition:background .15s}
+    [data-theme="light"] tbody tr{border-bottom:1px solid var(--border)}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,.025)}
+    [data-theme="light"] tbody tr:hover{background:rgba(0,0,0,.025)}
+    td{padding:13px 16px;font-size:13px;vertical-align:middle}
+    td:first-child{padding-left:22px}
+    .av-sm{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fff;flex-shrink:0}
+    .nc{display:flex;align-items:center;gap:11px}
+    .nc-name{font-weight:700;color:var(--text);font-size:13px}
+    .nc-meta{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)}
+    .chip-v{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(124,92,252,.12);color:#a78bfa;border:1px solid rgba(124,92,252,.2)}
+    .tlink{color:var(--accent);text-decoration:none;font-size:12px;font-weight:700}
+    .tlink:hover{text-decoration:underline}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+    @media(max-width:1000px){.page{padding:24px 20px 60px}nav{padding:0 20px}.kpi-grid{grid-template-columns:1fr 1fr}.charts-2,.charts-2b{grid-template-columns:1fr}}
+    @media(max-width:560px){.kpi-grid{grid-template-columns:1fr}.nav-links{display:none}}
+  </style>
+</head>
+<body>
+
+<!-- Thymeleaf data island: each customer emitted as a hidden span, read by JS from DOM -->
+<div id="crmData" style="display:none" aria-hidden="true">
+  <span th:each="c : ${customers}"
+        th:attr="
+          data-id=${c.id},
+          data-name=${c.name},
+          data-age=${c.age},
+          data-dob=${c.dob},
+          data-email=${c.email},
+          data-mobile=${c.mobile},
+          data-address=${c.address != null ? c.address : ''},
+          data-created=${c.creationdate != null ? c.creationdate : ''}
+        "></span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="brand">
+    <div class="brand-logo">CRM</div>
+    <div class="brand-tag">Pro</div>
+  </div>
+  <div class="nav-links">
+    <a href="/dashboard"    class="nav-link active">⊞ Dashboard</a>
+    <a href="/Customerlist" class="nav-link">☰ Customers</a>
+    <a href="/showCustomerForm" class="nav-link">＋ Add</a>
+    <a href="/exportCustomers"  class="nav-link">↓ Export</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <span id="themeLbl">🌙 Dark</span>
+      <div class="ttrack"><div class="tthumb"></div></div>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="pg-eyebrow">Analytics Overview</div>
+  <h1 class="pg-title">Customer <em>Dashboard</em></h1>
+  <p class="pg-sub">Real-time insights across your entire customer base.</p>
+  <div class="pg-acts">
+    <a href="/Customerlist" class="btn btn-ghost btn-sm">☰ All Customers</a>
+    <a href="/exportCustomers" class="btn btn-ghost btn-sm">↓ Export CSV</a>
+    <a href="/showCustomerForm" class="btn btn-primary btn-sm">＋ Add Customer</a>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-label">Total Customers</div><div class="kpi-val" id="kT">0</div><div class="kpi-note">All records</div></div>
+    <div class="kpi"><div class="kpi-icon">🎂</div><div class="kpi-label">Average Age</div><div class="kpi-val" id="kA">—</div><div class="kpi-note">Across all customers</div></div>
+    <div class="kpi"><div class="kpi-icon">📍</div><div class="kpi-label">With Address</div><div class="kpi-val" id="kAd">0</div><div class="kpi-note">Location data filled</div></div>
+    <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-label">Age Range</div><div class="kpi-val" id="kR">—</div><div class="kpi-note">Youngest – Oldest</div></div>
+  </div>
+
+  <!-- Charts row 1 -->
+  <div class="charts-2">
+    <div class="chart-card">
+      <div class="ch-hd"><div><div class="ch-title">Age Distribution</div><div class="ch-sub">Customers by age bracket</div></div><span class="ch-badge">BAR</span></div>
+      <canvas id="barChart" height="210"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="ch-hd"><div><div class="ch-title">Age Group Share</div><div class="ch-sub">Proportional breakdown</div></div><span class="ch-badge">DONUT</span></div>
+      <canvas id="donutChart" height="210"></canvas>
+    </div>
+  </div>
+
+  <!-- Charts row 2: full-width timeline -->
+  <div class="charts-1">
+    <div class="chart-card">
+      <div class="ch-hd"><div><div class="ch-title">Registration Timeline</div><div class="ch-sub">Customers registered per date</div></div><span class="ch-badge">LINE</span></div>
+      <div id="timelineWrap"><canvas id="lineChart" height="100"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts row 3 -->
+  <div class="charts-2b">
+    <div class="chart-card">
+      <div class="ch-hd"><div><div class="ch-title">Bracket Details</div><div class="ch-sub">Count per age group</div></div></div>
+      <div id="distBars"></div>
+    </div>
+    <div class="chart-card">
+      <div class="ch-hd"><div><div class="ch-title">Field Completeness</div><div class="ch-sub">% of records with each field</div></div><span class="ch-badge">RADAR</span></div>
+      <canvas id="radarChart" height="210"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent -->
+  <div class="recent-card">
+    <div class="rec-hd">
+      <div><h3>Recent Customers</h3><div style="font-size:11px;color:var(--muted);margin-top:3px">Last 10 records</div></div>
+      <a href="/Customerlist" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <table><thead><tr><th>Customer</th><th>Age</th><th>Mobile</th><th>Address</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody id="recTbody"></tbody></table>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ── Theme ── */
+(function(){
+  const t = localStorage.getItem('crmTheme')||'dark';
+  if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeLbl').textContent='☀️ Light';}
+})();
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const nxt=cur==='light'?'dark':'light';
+  document.documentElement.setAttribute('data-theme',nxt);
+  localStorage.setItem('crmTheme',nxt);
+  document.getElementById('themeLbl').textContent=nxt==='light'?'☀️ Light':'🌙 Dark';
+  rebuildCharts();
+}
+
+/* ── Parse data ── */
+/* Parse customers from DOM data island (Thymeleaf-safe approach) */
+let CX = [];
+document.querySelectorAll('#crmData span').forEach(el => {
+  CX.push({
+    id:      el.dataset.id      || '',
+    name:    el.dataset.name    || '',
+    age:     el.dataset.age     || '',
+    dob:     el.dataset.dob     || '',
+    email:   el.dataset.email   || '',
+    mobile:  el.dataset.mobile  || '',
+    address: el.dataset.address || '',
+    created: el.dataset.created || ''
+  });
+});
+
+/* ── Helpers ── */
+const isLight=()=>document.documentElement.getAttribute('data-theme')==='light';
+const gc=()=>isLight()?'rgba(0,0,0,.07)':'rgba(255,255,255,.06)';
+const tc=()=>isLight()?'#444466':'#9090aa';
+
+function brackets(ages){
+  const b={'0-20':0,'21-35':0,'36-50':0,'51-65':0,'66+':0};
+  ages.forEach(a=>{if(a<=20)b['0-20']++;else if(a<=35)b['21-35']++;else if(a<=50)b['36-50']++;else if(a<=65)b['51-65']++;else b['66+']++;});
+  return b;
+}
+function timeline(){
+  const m={};
+  CX.forEach(c=>{const d=c.created?.trim();if(d)m[d]=(m[d]||0)+1;});
+  const keys=Object.keys(m).sort();
+  return{labels:keys,data:keys.map(k=>m[k])};
+}
+
+/* ── KPIs ── */
+function fillKPIs(){
+  const ages=CX.map(c=>parseInt(c.age)).filter(a=>!isNaN(a));
+  document.getElementById('kT').textContent=CX.length;
+  document.getElementById('kA').textContent=ages.length?Math.round(ages.reduce((a,b)=>a+b,0)/ages.length):'—';
+  document.getElementById('kAd').textContent=CX.filter(c=>c.address?.trim()).length;
+  document.getElementById('kR').textContent=ages.length?`${Math.min(...ages)}–${Math.max(...ages)}`:'—';
+}
+
+/* ── Dist bars ── */
+function fillDist(){
+  const ages=CX.map(c=>parseInt(c.age)).filter(a=>!isNaN(a));
+  const b=brackets(ages);
+  const mx=Math.max(...Object.values(b),1);
+  document.getElementById('distBars').innerHTML=Object.entries(b).map(([l,n])=>`
+    <div class="dist-row">
+      <div class="dist-lbl">${l}</div>
+      <div class="dist-bw"><div class="dist-b" style="width:0" data-w="${Math.round((n/mx)*100)}%"></div></div>
+      <div class="dist-cnt">${n}</div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.dist-b').forEach(b=>b.style.width=b.dataset.w),300);
+}
+
+/* ── Recent table ── */
+function fillRecent(){
+  const rows=[...CX].slice(-10).reverse();
+  document.getElementById('recTbody').innerHTML=rows.length?rows.map(c=>`
+    <tr>
+      <td><div class="nc"><div class="av-sm">${(c.name||'?')[0].toUpperCase()}</div><div><div class="nc-name">${c.name||'—'}</div><div class="nc-meta">#${c.id} · ${c.email||'—'}</div></div></div></td>
+      <td><span class="chip-v">${c.age||'—'}</span></td>
+      <td class="mono">${c.mobile||'—'}</td>
+      <td style="font-size:12px;color:var(--muted2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.address||'—'}</td>
+      <td class="mono">${c.created||'—'}</td>
+      <td><a href="/viewCustomer?id=${c.id}" class="tlink">View →</a></td>
+    </tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No customers yet.</td></tr>';
+}
+
+/* ── Charts ── */
+let CHARTS={};
+function buildCharts(){
+  const ages=CX.map(c=>parseInt(c.age)).filter(a=>!isNaN(a));
+  const b=brackets(ages);
+  const bL=Object.keys(b), bD=Object.values(b);
+  const tl=timeline();
+  const n=CX.length||1;
+  const fillRate=f=>Math.round((CX.filter(f).length/n)*100);
+  const isDark=!isLight();
+  const COLORS=['rgba(229,9,20,.75)','rgba(255,94,26,.75)','rgba(245,197,24,.75)','rgba(0,212,170,.75)','rgba(124,92,252,.75)'];
+  const BORDERS=['#e50914','#ff5e1a','#f5c518','#00d4aa','#7c5cfc'];
+
+  CHARTS.bar=new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels:bL,datasets:[{label:'Customers',data:bD,backgroundColor:COLORS,borderColor:BORDERS,borderWidth:2,borderRadius:8}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc()},ticks:{color:tc(),font:{family:'JetBrains Mono',size:11}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{family:'JetBrains Mono',size:11}}}}}
+  });
+
+  CHARTS.donut=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:bL,datasets:[{data:bD,backgroundColor:COLORS,borderColor:isDark?'#12121e':'#fff',borderWidth:3,hoverOffset:8}]},
+    options:{responsive:true,cutout:'68%',plugins:{legend:{position:'right',labels:{color:tc(),font:{family:'Syne',size:12},padding:12}}}}
+  });
+
+  if(tl.labels.length){
+    CHARTS.line=new Chart(document.getElementById('lineChart'),{
+      type:'line',
+      data:{labels:tl.labels,datasets:[{label:'Registrations',data:tl.data,borderColor:'#e50914',backgroundColor:'rgba(229,9,20,.1)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#e50914',pointBorderColor:isDark?'#12121e':'#fff',pointBorderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc()},ticks:{color:tc(),font:{family:'JetBrains Mono',size:11}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{family:'JetBrains Mono',size:11}}}}}
+    });
+  } else {
+    document.getElementById('timelineWrap').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">No creation date data — add dates to customers to see timeline.</div>';
+  }
+
+  CHARTS.radar=new Chart(document.getElementById('radarChart'),{
+    type:'radar',
+    data:{
+      labels:['Name','DOB','Age','Email','Mobile','Address','Created'],
+      datasets:[{label:'Fill %',data:[
+        fillRate(c=>c.name?.trim()),fillRate(c=>c.dob?.trim()),fillRate(c=>c.age?.trim()),
+        fillRate(c=>c.email?.trim()),fillRate(c=>c.mobile?.trim()),fillRate(c=>c.address?.trim()),fillRate(c=>c.created?.trim())
+      ],borderColor:'#00d4aa',backgroundColor:'rgba(0,212,170,.12)',pointBackgroundColor:'#00d4aa',pointBorderColor:isDark?'#12121e':'#fff',pointBorderWidth:2,pointRadius:5}]
+    },
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{grid:{color:gc()},pointLabels:{color:tc(),font:{family:'Syne',size:11}},ticks:{display:false},min:0,max:100,angleLines:{color:gc()}}}}
+  });
+}
+
+function rebuildCharts(){Object.values(CHARTS).forEach(c=>c.destroy());CHARTS={};buildCharts();}
+
+window.addEventListener('DOMContentLoaded',()=>{fillKPIs();fillDist();fillRecent();buildCharts();});
+</script>
+</body>
+</html>

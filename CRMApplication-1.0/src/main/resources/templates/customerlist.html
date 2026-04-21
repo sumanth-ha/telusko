@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Pro — Customers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#080810;--surface:#0e0e1a;--card:#12121e;--card2:#1a1a2a;--border:#232338;--accent:#e50914;--accent2:#ff5e1a;--gold:#f5c518;--teal:#00d4aa;--violet:#7c5cfc;--text:#ececf4;--muted:#60607a;--muted2:#9090aa;--success:#00d4aa;--danger:#ff3b5c}
+    [data-theme="light"]{--bg:#f0f0f8;--surface:#e8e8f2;--card:#ffffff;--card2:#f5f5ff;--border:#d0d0e4;--text:#111128;--muted:#8080b0;--muted2:#5555a0}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:.4}
+
+    nav{position:sticky;top:0;z-index:200;height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,8,16,.94);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.05);transition:background .3s}
+    [data-theme="light"] nav{background:rgba(240,240,248,.96);border-bottom:1px solid var(--border)}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;background:linear-gradient(130deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted2);border:1px solid var(--border);padding:3px 8px;border-radius:4px}
+    .nav-links{display:flex;gap:4px}
+    .nav-link{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;text-decoration:none;color:var(--muted2);font-size:13px;font-weight:600;transition:all .2s;border:1px solid transparent}
+    .nav-link:hover,.nav-link.active{color:var(--text);background:rgba(229,9,20,.08);border-color:rgba(229,9,20,.2)}
+    .nav-link.active{color:var(--accent)}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .theme-btn{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:700;color:var(--muted2);transition:all .2s;font-family:'Syne',sans-serif}
+    .theme-btn:hover{background:var(--card2);color:var(--text)}
+    .ttrack{width:34px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background .3s}
+    [data-theme="light"] .ttrack{background:var(--accent)}
+    .tthumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+    [data-theme="light"] .tthumb{transform:translateX(16px)}
+
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;letter-spacing:.3px;white-space:nowrap}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(229,9,20,.3)}
+    .btn-primary:hover{background:#ff1f2c;transform:translateY(-1px)}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,.11)}
+    [data-theme="light"] .btn-ghost{background:rgba(0,0,0,.05)}
+    [data-theme="light"] .btn-ghost:hover{background:rgba(0,0,0,.1)}
+    .btn-teal{background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.25)}
+    .btn-teal:hover{background:rgba(0,212,170,.2)}
+    .btn-gold{background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25)}
+    .btn-gold:hover{background:rgba(245,197,24,.2)}
+    .btn-danger{background:rgba(255,59,92,.08);color:var(--danger);border:1px solid rgba(255,59,92,.25)}
+    .btn-danger:hover{background:rgba(255,59,92,.18)}
+    .btn-sm{padding:6px 14px;font-size:12px}
+    .btn-xs{padding:5px 11px;font-size:11px}
+    .btn-violet{background:rgba(124,92,252,.1);color:#a78bfa;border:1px solid rgba(124,92,252,.25)}
+    .btn-violet:hover{background:rgba(124,92,252,.2)}
+
+    /* HERO */
+    .hero{position:relative;overflow:hidden;padding:48px 48px 36px;background:linear-gradient(140deg,#0d0006 0%,#14000a 35%,#08081a 70%,#080810 100%);border-bottom:1px solid var(--border);transition:background .3s}
+    [data-theme="light"] .hero{background:linear-gradient(140deg,#fff0f4,#f0f0ff)}
+    .hero-orb{position:absolute;left:-100px;top:-100px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(229,9,20,.12),transparent 65%);pointer-events:none}
+    .hero-lines{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:56px 56px}
+    [data-theme="light"] .hero-lines{background-image:linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px)}
+    .hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;position:relative;z-index:1}
+    .hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,66px);letter-spacing:2px;line-height:.95;color:var(--text);position:relative;z-index:1}
+    .hero-h1 em{color:var(--accent);font-style:normal}
+    .hero-sub{color:var(--muted2);font-size:14px;font-weight:400;margin-top:10px;position:relative;z-index:1}
+
+    /* STATS */
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);margin:0 48px;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 16px 50px rgba(0,0,0,.3)}
+    .stat{background:var(--card);padding:20px 24px;position:relative;overflow:hidden;border-right:1px solid var(--border)}
+    .stat:last-child{border-right:none}
+    .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .stat:nth-child(1)::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    .stat:nth-child(2)::before{background:linear-gradient(90deg,var(--teal),#00a8ff)}
+    .stat:nth-child(3)::before{background:linear-gradient(90deg,var(--gold),#ffa800)}
+    .stat:nth-child(4)::before{background:linear-gradient(90deg,var(--violet),#c084fc)}
+    .stat-lbl{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .stat-val{font-family:'Bebas Neue',sans-serif;font-size:40px;line-height:1;color:var(--text)}
+    .stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+    /* TOOLBAR */
+    .toolbar{padding:22px 48px 0;display:flex;flex-direction:column;gap:12px}
+    .toolbar-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .search-wrap{position:relative;flex:1;min-width:260px;max-width:440px}
+    .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+    .search-inp{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:11px 14px 11px 40px;border-radius:9px;font-family:'Syne',sans-serif;font-size:14px;outline:none;transition:all .2s}
+    .search-inp::placeholder{color:var(--muted)}
+    .search-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(229,9,20,.1)}
+    [data-theme="light"] .search-inp{background:#fff}
+
+    /* ADVANCED FILTER PANEL */
+    .filter-panel{
+      background:var(--card);border:1px solid var(--border);border-radius:12px;
+      padding:0;max-height:0;overflow:hidden;
+      transition:max-height .35s ease,padding .35s ease;
+    }
+    .filter-panel.open{max-height:300px;padding:18px 20px}
+    .filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+    .filter-item{}
+    .filter-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+    .filter-sel,.filter-text-inp{
+      width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+      padding:9px 12px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:all .2s;
+    }
+    [data-theme="light"] .filter-sel,[data-theme="light"] .filter-text-inp{background:#fff}
+    .filter-sel:focus,.filter-text-inp:focus{border-color:var(--accent)}
+    .filter-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px}
+    .active-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .active-chip{
+      display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+      background:rgba(229,9,20,.1);border:1px solid rgba(229,9,20,.25);color:var(--accent);
+      font-size:11px;font-weight:700;cursor:pointer;
+    }
+    .active-chip:hover{background:rgba(229,9,20,.2)}
+    .chip-x{font-size:13px;line-height:1}
+
+    /* SORT ROW */
+    .sort-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .sort-btns{display:flex;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:4px}
+    .sort-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px 12px;border-radius:6px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all .2s}
+    .sort-btn.active{background:var(--accent);color:#fff}
+    .count-lbl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:auto}
+
+    /* TABLE */
+    .table-section{padding:20px 48px 80px}
+    .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+    table{width:100%;border-collapse:collapse}
+    thead{background:rgba(255,255,255,.025)}
+    [data-theme="light"] thead{background:rgba(0,0,0,.025)}
+    th{padding:14px 18px;text-align:left;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+    th:hover{color:var(--muted2)}
+    th:first-child{padding-left:24px}
+    th.no-sort{cursor:default}
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.038);transition:background .15s}
+    [data-theme="light"] tbody tr{border-bottom:1px solid var(--border)}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,.025)}
+    [data-theme="light"] tbody tr:hover{background:rgba(0,0,0,.022)}
+    td{padding:15px 18px;font-size:13px;vertical-align:middle}
+    td:first-child{padding-left:24px}
+    .av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;color:#fff;flex-shrink:0}
+    .nc{display:flex;align-items:center;gap:12px}
+    .nc-name{font-weight:700;color:var(--text);font-size:13px}
+    .nc-meta{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+    .mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted2)}
+    .addr-td{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted2)}
+    .chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+    .chip-age{background:rgba(124,92,252,.12);color:#a78bfa;border:1px solid rgba(124,92,252,.2);font-family:'JetBrains Mono',monospace}
+    .chip-date{background:rgba(0,212,170,.08);color:var(--teal);border:1px solid rgba(0,212,170,.2);font-family:'JetBrains Mono',monospace;font-size:10px}
+    .actions{display:flex;align-items:center;justify-content:center;gap:5px}
+    .empty{padding:80px 20px;text-align:center}
+    .empty-icon{font-size:60px;opacity:.2;margin-bottom:16px}
+    .empty-t{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--muted)}
+    .empty-s{color:var(--muted);font-size:13px;margin-top:8px}
+
+    /* IMPORT MODAL */
+    .modal-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-bg.open{opacity:1;pointer-events:all}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 44px;width:520px;max-width:92vw;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 48px 120px rgba(0,0,0,.7)}
+    .modal-bg.open .modal{transform:scale(1)}
+    .modal-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:6px}
+    .modal-sub{color:var(--muted2);font-size:13px;margin-bottom:24px;font-weight:400}
+    .drop-zone{
+      border:2px dashed var(--border);border-radius:12px;padding:36px;text-align:center;
+      cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02);
+    }
+    .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(229,9,20,.04)}
+    .drop-icon{font-size:36px;margin-bottom:12px}
+    .drop-t{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .drop-s{font-size:12px;color:var(--muted);font-weight:400}
+    #csvFileInp{display:none}
+    .import-preview{margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:200px}
+    .import-preview table{font-size:11px}
+    .import-preview th{font-size:10px;padding:8px 12px;background:rgba(255,255,255,.04)}
+    .import-preview td{padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:11px}
+    .import-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+    .import-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6}
+    .import-note code{background:var(--surface);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px}
+
+    /* DELETE MODAL */
+    .del-modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 44px;width:440px;max-width:92vw;text-align:center;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 48px 120px rgba(0,0,0,.7)}
+    .modal-bg.open .del-modal{transform:scale(1)}
+    .del-icon{font-size:48px;margin-bottom:14px}
+    .del-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:8px}
+    .del-body{color:var(--muted2);font-size:14px;line-height:1.7;margin-bottom:28px;font-weight:400}
+    .del-body strong{color:var(--text)}
+    .modal-btns{display:flex;gap:12px;justify-content:center}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:28px;right:28px;z-index:9000;padding:14px 22px;border-radius:10px;font-size:14px;font-weight:700;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast-del{background:var(--danger);color:#fff;box-shadow:0 8px 32px rgba(255,59,92,.4)}
+    .toast-ok{background:var(--teal);color:#000;box-shadow:0 8px 32px rgba(0,212,170,.4)}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    tbody tr{animation:fadeUp .3s ease both}
+    tbody tr:nth-child(1){animation-delay:.03s}tbody tr:nth-child(2){animation-delay:.06s}tbody tr:nth-child(3){animation-delay:.09s}tbody tr:nth-child(4){animation-delay:.12s}tbody tr:nth-child(5){animation-delay:.15s}tbody tr:nth-child(6){animation-delay:.18s}
+
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+    @media(max-width:1000px){nav,.hero,.stats-strip,.toolbar,.table-section{padding-left:20px;padding-right:20px}.stats-strip{grid-template-columns:1fr 1fr;margin:0 20px}.stat{border-right:none;border-bottom:1px solid var(--border)}.stat:nth-child(odd){border-right:1px solid var(--border)}.stat:last-child,.stat:nth-last-child(2){border-bottom:none}th:nth-child(5),td:nth-child(5),th:nth-child(6),td:nth-child(6){display:none}}
+    @media(max-width:640px){.stats-strip{grid-template-columns:1fr}.stat{border-right:none!important}.stat:nth-child(odd){border-right:none!important}.nav-links{display:none}th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none}}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="brand"><div class="brand-logo">CRM</div><div class="brand-tag">Pro</div></div>
+  <div class="nav-links">
+    <a href="/dashboard" class="nav-link">⊞ Dashboard</a>
+    <a href="/Customerlist" class="nav-link active">☰ Customers</a>
+    <a href="/showCustomerForm" class="nav-link">＋ Add</a>
+    <a href="/exportCustomers" class="nav-link">↓ Export</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()"><span id="themeLbl">🌙 Dark</span><div class="ttrack"><div class="tthumb"></div></div></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-orb"></div><div class="hero-lines"></div>
+  <div class="hero-eyebrow">Customer Management</div>
+  <h1 class="hero-h1">Your <em>Customer</em><br>Universe</h1>
+  <p class="hero-sub">Search, filter, and manage every customer record from one hub.</p>
+</div>
+
+<!-- STATS -->
+<div style="margin-top:24px">
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-lbl">Total Customers</div><div class="stat-val" th:text="${#lists.size(customers)}">0</div><div class="stat-sub">All records</div></div>
+    <div class="stat"><div class="stat-lbl">Avg Age</div><div class="stat-val" id="sAvg">—</div><div class="stat-sub">Across all</div></div>
+    <div class="stat"><div class="stat-lbl">With Address</div><div class="stat-val" id="sAddr">—</div><div class="stat-sub">Location data</div></div>
+    <div class="stat"><div class="stat-lbl">Visible</div><div class="stat-val" id="sVis" th:text="${#lists.size(customers)}">0</div><div class="stat-sub">After filters</div></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-top">
+    <!-- Search -->
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-inp" id="searchInp" placeholder="Search name, email, mobile, address…" oninput="applyFilters()"/>
+    </div>
+    <!-- Advanced filter toggle -->
+    <button class="btn btn-ghost btn-sm" onclick="toggleFilters(this)" id="filterToggle">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filters
+    </button>
+    <!-- Import -->
+    <button class="btn btn-violet btn-sm" onclick="openImport()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import CSV
+    </button>
+    <!-- Add -->
+    <a href="/showCustomerForm" class="btn btn-primary btn-sm">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Customer
+    </a>
+    <a href="/exportCustomers" class="btn btn-teal btn-sm">↓ Export</a>
+    <span class="count-lbl" id="countLbl"></span>
+  </div>
+
+  <!-- Advanced Filter Panel -->
+  <div class="filter-panel" id="filterPanel">
+    <div class="filter-grid">
+      <div class="filter-item">
+        <div class="filter-label">Age Range</div>
+        <select class="filter-sel" id="fAge" onchange="applyFilters()">
+          <option value="">All Ages</option>
+          <option value="0-20">0–20</option>
+          <option value="21-35">21–35</option>
+          <option value="36-50">36–50</option>
+          <option value="51-65">51–65</option>
+          <option value="66-999">66+</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <div class="filter-label">Has Address</div>
+        <select class="filter-sel" id="fAddr" onchange="applyFilters()">
+          <option value="">Any</option>
+          <option value="yes">With Address</option>
+          <option value="no">No Address</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <div class="filter-label">Created From</div>
+        <input type="text" class="filter-text-inp" id="fDateFrom" placeholder="YYYY-MM-DD" oninput="applyFilters()"/>
+      </div>
+      <div class="filter-item">
+        <div class="filter-label">Created To</div>
+        <input type="text" class="filter-text-inp" id="fDateTo" placeholder="YYYY-MM-DD" oninput="applyFilters()"/>
+      </div>
+      <div class="filter-item">
+        <div class="filter-label">Min Age</div>
+        <input type="number" class="filter-text-inp" id="fAgeMin" placeholder="e.g. 18" min="0" oninput="applyFilters()"/>
+      </div>
+      <div class="filter-item">
+        <div class="filter-label">Max Age</div>
+        <input type="number" class="filter-text-inp" id="fAgeMax" placeholder="e.g. 60" min="0" oninput="applyFilters()"/>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear All</button>
+    </div>
+  </div>
+
+  <!-- Active filter chips -->
+  <div class="active-chips" id="activeChips"></div>
+
+  <!-- Sort row -->
+  <div class="sort-row">
+    <div class="sort-btns">
+      <button class="sort-btn active" onclick="sortBy('name',this)">Name</button>
+      <button class="sort-btn" onclick="sortBy('id',this)">ID</button>
+      <button class="sort-btn" onclick="sortBy('age',this)">Age</button>
+      <button class="sort-btn" onclick="sortBy('date',this)">Created</button>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="table-section">
+  <div class="table-wrap">
+    <table id="custTable">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>DOB</th>
+          <th>Age</th>
+          <th>Mobile</th>
+          <th>Address</th>
+          <th>Created</th>
+          <th class="no-sort">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr th:each="c : ${customers}">
+          <td><div class="nc">
+            <div class="av" th:text="${#strings.toUpperCase(#strings.substring(c.name,0,1))}">A</div>
+            <div>
+              <div class="nc-name" th:text="${c.name}">Name</div>
+              <div class="nc-meta" th:text="'#' + ${c.id} + ' · ' + ${c.email}">#01 · email</div>
+            </div>
+          </div></td>
+          <td class="mono" th:text="${c.dob}">1990-01-01</td>
+          <td><span class="chip chip-age" th:text="${c.age}">30</span></td>
+          <td class="mono" th:text="${c.mobile}">9876543210</td>
+          <td><div class="addr-td" th:text="${c.address != null and !#strings.isEmpty(c.address)} ? ${c.address} : '—'">Bengaluru</div></td>
+          <td><span class="chip chip-date" th:text="${c.creationdate != null and !#strings.isEmpty(c.creationdate)} ? ${c.creationdate} : '—'">2024-01</span></td>
+          <td>
+            <div class="actions">
+              <a th:href="@{/viewCustomer(id=${c.id})}" class="btn btn-ghost btn-xs">👁</a>
+              <a th:href="@{/updateCustomer(id=${c.id})}" class="btn btn-gold btn-xs">✎</a>
+              <button class="btn btn-danger btn-xs"
+                th:attr="onclick='openDel(' + ${c.id} + ',\'' + ${c.name} + '\')'">🗑</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div th:if="${#lists.isEmpty(customers)}" class="empty">
+      <div class="empty-icon">👥</div>
+      <div class="empty-t">No Customers Yet</div>
+      <p class="empty-s">Add your first customer to get started.</p>
+      <br/><a href="/showCustomerForm" class="btn btn-primary" style="margin:0 auto">＋ Add First Customer</a>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="delModal">
+  <div class="del-modal">
+    <div class="del-icon">🗑️</div>
+    <div class="del-title">Delete Customer?</div>
+    <p class="del-body" id="delBody">This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeDel()">Cancel</button>
+      <a id="delBtn" href="#" class="btn btn-danger">Delete Permanently</a>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-bg" id="importModal">
+  <div class="modal">
+    <div class="modal-title">📥 Import from CSV</div>
+    <div class="modal-sub">Upload a CSV file to bulk-add customers. Preview before confirming.</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFileInp').click()"
+         ondragover="event.preventDefault();this.classList.add('dragover')"
+         ondragleave="this.classList.remove('dragover')"
+         ondrop="handleDrop(event)">
+      <div class="drop-icon">📄</div>
+      <div class="drop-t" id="dropTitle">Drop CSV here or click to browse</div>
+      <div class="drop-s">Supports .csv files up to 5MB</div>
+    </div>
+    <input type="file" id="csvFileInp" accept=".csv" onchange="handleFile(this.files[0])"/>
+    <div id="importPreview" class="import-preview" style="display:none"></div>
+    <div class="import-note">
+      Expected CSV columns (header row required):<br/>
+      <code>name</code>, <code>dob</code> (yyyy-MM-dd), <code>age</code>, <code>email</code>, <code>mobile</code>, <code>address</code>, <code>creationdate</code><br/>
+      All rows are sent in a single POST to <code>/saveCustomers</code>. The page reloads after import.
+    </div>
+    <div class="import-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeImport()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="importSubmitBtn" onclick="submitImport()" style="display:none">
+        ✓ Import Records
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast toast-del" id="toast">🗑 Customer deleted</div>
+<div class="toast toast-ok" id="toastOk">✓ Action complete</div>
+
+<script>
+/* ── Theme ── */
+(function(){
+  const t=localStorage.getItem('crmTheme')||'dark';
+  if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeLbl').textContent='☀️ Light';}
+})();
+function toggleTheme(){
+  const c=document.documentElement.getAttribute('data-theme');
+  const n=c==='light'?'dark':'light';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('crmTheme',n);
+  document.getElementById('themeLbl').textContent=n==='light'?'☀️ Light':'🌙 Dark';
+}
+
+/* ── Delete modal ── */
+function openDel(id,name){
+  document.getElementById('delBody').innerHTML=`Permanently delete <strong>${name}</strong> (ID: #${id})? This cannot be undone.`;
+  document.getElementById('delBtn').href=`/deleteCustomer?id=${id}`;
+  document.getElementById('delModal').classList.add('open');
+}
+function closeDel(){document.getElementById('delModal').classList.remove('open');}
+document.getElementById('delModal').addEventListener('click',e=>{if(e.target===document.getElementById('delModal'))closeDel();});
+
+/* ── Filter panel toggle ── */
+function toggleFilters(btn){
+  const p=document.getElementById('filterPanel');
+  p.classList.toggle('open');
+  btn.style.background=p.classList.contains('open')?'rgba(229,9,20,.1)':'';
+  btn.style.borderColor=p.classList.contains('open')?'rgba(229,9,20,.3)':'';
+  btn.style.color=p.classList.contains('open')?'var(--accent)':'';
+}
+
+/* ── Active filter chips ── */
+function updateChips(){
+  const items=[];
+  const age=document.getElementById('fAge').value;
+  const addr=document.getElementById('fAddr').value;
+  const df=document.getElementById('fDateFrom').value;
+  const dt=document.getElementById('fDateTo').value;
+  const amn=document.getElementById('fAgeMin').value;
+  const amx=document.getElementById('fAgeMax').value;
+  const q=document.getElementById('searchInp').value;
+  if(q) items.push({label:`Search: "${q}"`,clear:()=>{document.getElementById('searchInp').value='';applyFilters();}});
+  if(age) items.push({label:`Age: ${age}`,clear:()=>{document.getElementById('fAge').value='';applyFilters();}});
+  if(addr) items.push({label:`Address: ${addr}`,clear:()=>{document.getElementById('fAddr').value='';applyFilters();}});
+  if(df) items.push({label:`From: ${df}`,clear:()=>{document.getElementById('fDateFrom').value='';applyFilters();}});
+  if(dt) items.push({label:`To: ${dt}`,clear:()=>{document.getElementById('fDateTo').value='';applyFilters();}});
+  if(amn) items.push({label:`Min age: ${amn}`,clear:()=>{document.getElementById('fAgeMin').value='';applyFilters();}});
+  if(amx) items.push({label:`Max age: ${amx}`,clear:()=>{document.getElementById('fAgeMax').value='';applyFilters();}});
+  const c=document.getElementById('activeChips');
+  c.innerHTML=items.map((_,i)=>`<span class="active-chip" data-idx="${i}">${items[i].label} <span class="chip-x">×</span></span>`).join('');
+  c.querySelectorAll('.active-chip').forEach((el,i)=>el.addEventListener('click',()=>items[i].clear()));
+}
+
+/* ── Apply all filters ── */
+function applyFilters(){
+  const q=document.getElementById('searchInp').value.toLowerCase();
+  const ageRange=document.getElementById('fAge').value;
+  const addrF=document.getElementById('fAddr').value;
+  const dateFrom=document.getElementById('fDateFrom').value;
+  const dateTo=document.getElementById('fDateTo').value;
+  const ageMin=parseInt(document.getElementById('fAgeMin').value)||0;
+  const ageMax=parseInt(document.getElementById('fAgeMax').value)||999;
+
+  const rows=document.querySelectorAll('#tbody tr');
+  let vis=0;
+  rows.forEach(r=>{
+    const txt=r.textContent.toLowerCase();
+    const age=parseInt(r.querySelector('.chip-age')?.textContent||'0');
+    const addrTd=r.querySelector('.addr-td')?.textContent?.trim();
+    const dateTd=r.querySelector('.chip-date')?.textContent?.trim()||'';
+
+    // search
+    let ok=!q||txt.includes(q);
+    // bracket
+    if(ok&&ageRange){const[mn,mx]=ageRange.split('-').map(Number);ok=age>=mn&&age<=mx;}
+    // address
+    if(ok&&addrF==='yes')ok=addrTd&&addrTd!=='—';
+    if(ok&&addrF==='no')ok=!addrTd||addrTd==='—';
+    // date range
+    if(ok&&dateFrom&&dateTd!=='—')ok=dateTd>=dateFrom;
+    if(ok&&dateTo&&dateTd!=='—')ok=dateTd<=dateTo;
+    // age min/max
+    if(ok)ok=age>=ageMin&&age<=ageMax;
+
+    r.style.display=ok?'':'none';
+    if(ok)vis++;
+  });
+  document.getElementById('sVis').textContent=vis;
+  document.getElementById('countLbl').textContent=vis===rows.length?`${rows.length} records`:`${vis} / ${rows.length} records`;
+  updateChips();
+}
+
+function clearFilters(){
+  ['fAge','fAddr'].forEach(id=>document.getElementById(id).value='');
+  ['fDateFrom','fDateTo','fAgeMin','fAgeMax','searchInp'].forEach(id=>document.getElementById(id).value='');
+  applyFilters();
+}
+
+/* ── Sort ── */
+let sortDir={};
+function sortBy(key,btn){
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  sortDir[key]=!sortDir[key];
+  const tbody=document.getElementById('tbody');
+  const rows=Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a,b)=>{
+    let av='',bv='';
+    if(key==='name'){av=a.querySelector('.nc-name')?.textContent||'';bv=b.querySelector('.nc-name')?.textContent||'';}
+    else if(key==='id'){av=a.querySelector('.nc-meta')?.textContent||'';bv=b.querySelector('.nc-meta')?.textContent||'';}
+    else if(key==='age'){av=parseInt(a.querySelector('.chip-age')?.textContent||0);bv=parseInt(b.querySelector('.chip-age')?.textContent||0);return sortDir[key]?av-bv:bv-av;}
+    else if(key==='date'){av=a.querySelector('.chip-date')?.textContent||'';bv=b.querySelector('.chip-date')?.textContent||'';}
+    return sortDir[key]?av.localeCompare(bv):bv.localeCompare(av);
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+/* ── Stats ── */
+function initStats(){
+  const rows=document.querySelectorAll('#tbody tr');
+  document.getElementById('countLbl').textContent=`${rows.length} records`;
+  let tot=0,cnt=0,addr=0;
+  rows.forEach(r=>{
+    const a=parseInt(r.querySelector('.chip-age')?.textContent||'');
+    if(!isNaN(a)){tot+=a;cnt++;}
+    const ad=r.querySelector('.addr-td')?.textContent?.trim();
+    if(ad&&ad!=='—')addr++;
+  });
+  if(cnt)document.getElementById('sAvg').textContent=Math.round(tot/cnt);
+  document.getElementById('sAddr').textContent=addr;
+}
+
+/* ── CSV Import ── */
+let parsedRows=[];
+function openImport(){document.getElementById('importModal').classList.add('open');}
+function closeImport(){document.getElementById('importModal').classList.remove('open');parsedRows=[];document.getElementById('importPreview').style.display='none';document.getElementById('importSubmitBtn').style.display='none';document.getElementById('dropTitle').textContent='Drop CSV here or click to browse';document.getElementById('csvFileInp').value='';}
+document.getElementById('importModal').addEventListener('click',e=>{if(e.target===document.getElementById('importModal'))closeImport();});
+
+function handleDrop(e){
+  e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.name.endsWith('.csv'))handleFile(f);
+}
+
+function handleFile(file){
+  if(!file)return;
+  document.getElementById('dropTitle').textContent=`📄 ${file.name}`;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const lines=text.trim().split('\n');
+    if(lines.length<2)return;
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());
+    parsedRows=lines.slice(1).map(line=>{
+      const vals=line.split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+      const obj={};
+      headers.forEach((h,i)=>obj[h]=vals[i]||'');
+      return obj;
+    }).filter(r=>r.name);
+
+    // Preview table
+    const preview=document.getElementById('importPreview');
+    const cols=['name','dob','age','email','mobile','address','creationdate'];
+    preview.innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${parsedRows.slice(0,5).map(r=>`<tr>${cols.map(c=>`<td>${r[c]||'—'}</td>`).join('')}</tr>`).join('')}${parsedRows.length>5?`<tr><td colspan="${cols.length}" style="text-align:center;color:var(--muted);padding:8px">...and ${parsedRows.length-5} more rows</td></tr>`:''}</tbody></table>`;
+    preview.style.display='block';
+    document.getElementById('importSubmitBtn').style.display='inline-flex';
+    document.getElementById('importSubmitBtn').textContent=`✓ Import ${parsedRows.length} Records`;
+  };
+  reader.readAsText(file);
+}
+
+function submitImport(){
+  if(!parsedRows.length) return;
+
+  const btn = document.getElementById('importSubmitBtn');
+  btn.textContent = '⏳ Importing…';
+  btn.disabled = true;
+
+  // Map CSV rows to Customer field names exactly matching the entity
+  const payload = parsedRows.map(row => ({
+    name:         row['name']         || '',
+    dob:          row['dob']          || null,
+    age:          row['age']          || '',
+    email:        row['email']        || '',
+    mobile:       row['mobile']       || '',
+    address:      row['address']      || '',
+    creationdate: row['creationdate'] || ''
+  }));
+
+  // POST as JSON — controller must use @RequestBody List<Customer>
+  fetch('/saveCustomers', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload)
+  })
+  .then(res => {
+    if(res.ok || res.redirected) {
+      closeImport();
+      showToast('toastOk', `✓ ${parsedRows.length} customer${parsedRows.length!==1?'s':''} imported`);
+      setTimeout(() => location.reload(), 1600);
+    } else {
+      res.text().then(t => console.error('Import error:', t));
+      showToast('toast', '⚠ Import failed — check console');
+      btn.textContent = `✓ Import ${parsedRows.length} Records`;
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    console.error('Import fetch error:', err);
+    showToast('toast', '⚠ Network error during import');
+    btn.textContent = `✓ Import ${parsedRows.length} Records`;
+    btn.disabled = false;
+  });
+}
+
+function showToast(id,msg){
+  const t=document.getElementById(id);
+  if(msg)t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  initStats();
+  if(new URLSearchParams(location.search).get('deleted')==='true')showToast('toast','🗑 Customer deleted');
+});
+</script>
+</body>
+</html>

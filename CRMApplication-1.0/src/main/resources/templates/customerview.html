@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'CRM Pro — ' + ${customer.name}">CRM Pro — Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#080810;--surface:#0e0e1a;--card:#12121e;--card2:#1a1a2a;--border:#232338;--accent:#e50914;--accent2:#ff5e1a;--gold:#f5c518;--teal:#00d4aa;--violet:#7c5cfc;--text:#ececf4;--muted:#60607a;--muted2:#9090aa;--success:#00d4aa;--danger:#ff3b5c}
+    [data-theme="light"]{--bg:#f0f0f8;--surface:#e8e8f2;--card:#ffffff;--card2:#f5f5ff;--border:#d0d0e4;--text:#111128;--muted:#8080b0;--muted2:#5555a0}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:.4}
+
+    nav{position:sticky;top:0;z-index:200;height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(8,8,16,.94);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.05);transition:background .3s}
+    [data-theme="light"] nav{background:rgba(240,240,248,.96);border-bottom:1px solid var(--border)}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;background:linear-gradient(130deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted2);border:1px solid var(--border);padding:3px 8px;border-radius:4px}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+    .breadcrumb a{color:var(--accent);text-decoration:none}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .theme-btn{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:700;color:var(--muted2);transition:all .2s;font-family:'Syne',sans-serif}
+    .theme-btn:hover{background:var(--card2);color:var(--text)}
+    .ttrack{width:34px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background .3s}
+    [data-theme="light"] .ttrack{background:var(--accent)}
+    .tthumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+    [data-theme="light"] .tthumb{transform:translateX(16px)}
+
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;letter-spacing:.3px}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(229,9,20,.3)}
+    .btn-primary:hover{background:#ff1f2c;transform:translateY(-1px)}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,.11)}
+    [data-theme="light"] .btn-ghost{background:rgba(0,0,0,.05)}
+    [data-theme="light"] .btn-ghost:hover{background:rgba(0,0,0,.1)}
+    .btn-gold{background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25)}
+    .btn-gold:hover{background:rgba(245,197,24,.2)}
+    .btn-danger{background:rgba(255,59,92,.08);color:var(--danger);border:1px solid rgba(255,59,92,.25)}
+    .btn-danger:hover{background:rgba(255,59,92,.18)}
+    .btn-teal{background:rgba(0,212,170,.1);color:var(--teal);border:1px solid rgba(0,212,170,.25)}
+    .btn-teal:hover{background:rgba(0,212,170,.2)}
+    .btn-sm{padding:7px 14px;font-size:12px}
+
+    /* HERO */
+    .hero-banner{position:relative;overflow:hidden;height:220px;background:linear-gradient(140deg,#12000a 0%,#0a0018 50%,#080810 100%);transition:background .3s}
+    [data-theme="light"] .hero-banner{background:linear-gradient(140deg,#fff0f4,#f0f0ff)}
+    .orb1{position:absolute;left:-120px;top:-120px;width:460px;height:460px;border-radius:50%;background:radial-gradient(circle,rgba(229,9,20,.16),transparent 65%);animation:pulse 7s ease-in-out infinite alternate}
+    .orb2{position:absolute;right:-80px;bottom:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(124,92,252,.12),transparent 65%);animation:pulse 9s ease-in-out infinite alternate-reverse}
+    @keyframes pulse{to{transform:scale(1.1) translate(15px,10px)}}
+    .hero-lines{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:52px 52px}
+    [data-theme="light"] .hero-lines{background-image:linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px)}
+
+    /* PROFILE CARD */
+    .prof-wrap{max-width:1120px;margin:0 auto;padding:0 48px}
+    .prof-card{position:relative;z-index:10;margin-top:-84px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:30px 36px 26px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;box-shadow:0 28px 70px rgba(0,0,0,.5);animation:riseUp .5s cubic-bezier(.34,1.56,.64,1) both}
+    @keyframes riseUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    .big-av{width:88px;height:88px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:42px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));border:3px solid var(--bg);box-shadow:0 0 0 2px var(--accent),0 14px 36px rgba(229,9,20,.35);position:relative}
+    .sdot{position:absolute;bottom:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:var(--teal);border:3px solid var(--bg)}
+    .pi{flex:1;min-width:200px}
+    .pi-eye{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+    .pi-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,50px);letter-spacing:1.5px;line-height:1;color:var(--text)}
+    .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+    .chip{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600}
+    .ct{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:var(--teal)}
+    .cg{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25);color:var(--gold)}
+    .cv{background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);color:#a78bfa}
+    .cm{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted2)}
+    .pa{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+
+    /* BODY */
+    .body-grid{max-width:1120px;margin:0 auto;padding:28px 48px 80px;display:grid;grid-template-columns:1fr 310px;gap:22px}
+    .sec-t{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+    .sec-t::after{content:'';flex:1;height:1px;background:var(--border)}
+    .det-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px;animation:slideIn .38s ease both}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+    .det-card:nth-child(2){animation-delay:.07s}.det-card:nth-child(3){animation-delay:.14s}.det-card:nth-child(4){animation-delay:.21s}
+    .det-hd{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.02)}
+    [data-theme="light"] .det-hd{background:rgba(0,0,0,.02)}
+    .det-hd-icon{font-size:16px}
+    .det-hd h3{font-size:13px;font-weight:700;color:var(--text)}
+    .det-grid{display:grid;grid-template-columns:1fr 1fr}
+    .di{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.04);border-right:1px solid rgba(255,255,255,.04);transition:background .15s}
+    [data-theme="light"] .di{border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+    .di:hover{background:rgba(255,255,255,.022)}
+    [data-theme="light"] .di:hover{background:rgba(0,0,0,.022)}
+    .di:nth-child(even){border-right:none}
+    .di.full{grid-column:span 2;border-right:none}
+    .di:last-child,.di:nth-last-child(2):not(.full){border-bottom:none}
+    .di-l{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .di-v{font-size:14px;font-weight:600;color:var(--text)}
+    .di-v.mono{font-family:'JetBrains Mono',monospace;font-size:13px}
+    .di-v.big{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;line-height:1}
+    .di-v.addr{font-size:13px;font-weight:400;line-height:1.6;color:var(--muted2)}
+    .di-s{font-size:11px;color:var(--muted);margin-top:3px}
+
+    /* Copy */
+    .copyable{display:inline-flex;align-items:center;gap:7px;cursor:pointer;border-radius:7px;padding:3px 7px;margin:-3px -7px;transition:background .15s}
+    .copyable:hover{background:rgba(255,255,255,.07)}
+    [data-theme="light"] .copyable:hover{background:rgba(0,0,0,.06)}
+    .cico{opacity:0;transition:opacity .15s;font-size:12px}
+    .copyable:hover .cico{opacity:.6}
+    .cflash{font-size:11px;color:var(--teal);display:none}
+
+    /* Age ring */
+    .ring-row{display:flex;align-items:center;gap:16px}
+    .ring-bg{fill:none;stroke:var(--border);stroke-width:5}
+    .ring-fg{fill:none;stroke:var(--gold);stroke-width:5;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1.4s cubic-bezier(.25,.46,.45,.94)}
+    .ring-num{font-family:'Bebas Neue',sans-serif;font-size:20px;fill:var(--text);text-anchor:middle;dominant-baseline:central}
+    .ring-unit{font-size:7px;fill:var(--muted);text-anchor:middle}
+
+    /* ── NOTES / ACTIVITY LOG ── */
+    .notes-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px;animation:slideIn .38s .28s ease both}
+    .notes-hd{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.02)}
+    [data-theme="light"] .notes-hd{background:rgba(0,0,0,.02)}
+    .notes-hd-l{display:flex;align-items:center;gap:9px}
+    .notes-hd h3{font-size:13px;font-weight:700;color:var(--text)}
+    .note-count{font-size:10px;font-weight:700;letter-spacing:1px;background:rgba(229,9,20,.12);color:var(--accent);border:1px solid rgba(229,9,20,.25);padding:2px 8px;border-radius:10px}
+
+    /* Note composer */
+    .note-composer{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px}
+    .note-inp{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:400;outline:none;resize:none;height:42px;transition:all .2s;line-height:1.4}
+    [data-theme="light"] .note-inp{background:#f5f5ff}
+    .note-inp::placeholder{color:var(--muted)}
+    .note-inp:focus{border-color:var(--accent);height:80px;box-shadow:0 0 0 3px rgba(229,9,20,.1)}
+    .note-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .note-type-btn{
+      background:none;border:1px solid var(--border);color:var(--muted2);
+      padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
+      font-family:'Syne',sans-serif;transition:all .2s;
+    }
+    .note-type-btn.selected,.note-type-btn:hover{background:rgba(229,9,20,.1);border-color:rgba(229,9,20,.3);color:var(--accent)}
+
+    /* Activity log list */
+    .notes-list{max-height:380px;overflow-y:auto;padding:4px 0}
+    .note-item{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:12px;animation:fadeUp .3s ease both}
+    [data-theme="light"] .note-item{border-bottom:1px solid var(--border)}
+    .note-item:last-child{border-bottom:none}
+    .note-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid var(--border)}
+    .nd-note{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.25)}
+    .nd-call{background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.25)}
+    .nd-meeting{background:rgba(245,197,24,.1);border-color:rgba(245,197,24,.25)}
+    .nd-followup{background:rgba(124,92,252,.1);border-color:rgba(124,92,252,.25)}
+    .nd-auto{background:rgba(229,9,20,.1);border-color:rgba(229,9,20,.25)}
+    .note-body{}
+    .note-text{font-size:13px;color:var(--text);line-height:1.55;font-weight:400}
+    .note-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
+    .note-time{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .note-tag{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
+    .note-del-btn{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;transition:color .2s}
+    .note-del-btn:hover{color:var(--danger)}
+    .notes-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* SIDEBAR */
+    .sidebar{display:flex;flex-direction:column;gap:18px}
+    .side-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:slideIn .4s .2s ease both}
+    .side-hd{padding:13px 19px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.02)}
+    [data-theme="light"] .side-hd{background:rgba(0,0,0,.02)}
+    .side-body{padding:16px 18px}
+    .qa-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+    .qa-list li a{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:9px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid var(--border);transition:all .18s}
+    [data-theme="light"] .qa-list li a{background:rgba(0,0,0,.03)}
+    .qa-list li a:hover{background:rgba(255,255,255,.09);transform:translateX(3px)}
+    [data-theme="light"] .qa-list li a:hover{background:rgba(0,0,0,.07)}
+    .qa-arr{margin-left:auto;color:var(--muted)}
+
+    /* Timeline */
+    .tl{display:flex;flex-direction:column}
+    .tl-item{display:flex;gap:11px;padding-bottom:16px;position:relative}
+    .tl-item::before{content:'';position:absolute;left:13px;top:26px;bottom:0;width:1px;background:var(--border)}
+    .tl-item:last-child::before{display:none}
+    .tl-dot{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid var(--border);background:var(--card2);z-index:1}
+    .td-r{background:rgba(229,9,20,.12);border-color:rgba(229,9,20,.3)}
+    .td-t{background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.25)}
+    .td-g{background:rgba(245,197,24,.1);border-color:rgba(245,197,24,.25)}
+    .td-v{background:rgba(124,92,252,.1);border-color:rgba(124,92,252,.25)}
+    .tl-t{font-size:13px;font-weight:600;color:var(--text)}
+    .tl-s{font-size:11px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+    /* Completeness */
+    .cb-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+    .cb{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 1.1s ease}
+    .cb-lbl{font-size:11px;color:var(--muted);margin-top:5px}
+
+    /* DANGER */
+    .danger-wrap{max-width:1120px;margin:0 auto;padding:0 48px 80px}
+    .danger-card{background:rgba(255,59,92,.04);border:1px solid rgba(255,59,92,.18);border-radius:14px;padding:24px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .dz-icon{font-size:32px;flex-shrink:0}
+    .dz-text h4{font-size:14px;font-weight:700;color:var(--danger);margin-bottom:3px}
+    .dz-text p{font-size:13px;color:var(--muted2);line-height:1.55;font-weight:400}
+    .dz-btn{margin-left:auto}
+
+    /* MODAL */
+    .modal-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-bg.open{opacity:1;pointer-events:all}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 44px;width:440px;max-width:92vw;text-align:center;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 48px 120px rgba(0,0,0,.7)}
+    .modal-bg.open .modal{transform:scale(1)}
+    .modal-icon{font-size:48px;margin-bottom:14px}
+    .modal-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:8px}
+    .modal-body{color:var(--muted2);font-size:14px;line-height:1.7;margin-bottom:28px;font-weight:400}
+    .modal-body strong{color:var(--text)}
+    .modal-btns{display:flex;gap:12px;justify-content:center}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:28px;right:28px;z-index:9000;padding:13px 20px;border-radius:10px;font-size:13px;font-weight:700;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.3)}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast-ok{background:var(--teal);color:#000}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+    @media(max-width:960px){nav,.prof-wrap,.body-grid,.danger-wrap{padding-left:20px;padding-right:20px}.body-grid{grid-template-columns:1fr}.prof-card{flex-direction:column;align-items:flex-start;gap:18px}.pa{width:100%}.det-grid{grid-template-columns:1fr}.di{border-right:none}.di.full{grid-column:span 1}.di:last-child{border-bottom:none}}
+  </style>
+</head>
+<body>
+
+<!-- Inject customer ID for JS -->
+<div id="custId" th:attr="data-id=${customer.id}" style="display:none"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="brand"><div class="brand-logo">CRM</div><div class="brand-tag">Pro</div></div>
+  <div class="breadcrumb">
+    <a href="/Customerlist">Customers</a>
+    <span>›</span>
+    <span th:text="${customer.name}">Profile</span>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()"><span id="themeLbl">🌙 Dark</span><div class="ttrack"><div class="tthumb"></div></div></button>
+    <a th:href="@{/updateCustomer(id=${customer.id})}" class="btn btn-gold btn-sm">✎ Edit</a>
+    <a href="/Customerlist" class="btn btn-ghost btn-sm">← Back</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-banner">
+  <div class="orb1"></div><div class="orb2"></div><div class="hero-lines"></div>
+</div>
+
+<!-- PROFILE CARD -->
+<div class="prof-wrap">
+  <div class="prof-card">
+    <div class="big-av" th:text="${#strings.toUpperCase(#strings.substring(customer.name,0,1))}">A
+      <div class="sdot"></div>
+    </div>
+    <div class="pi">
+      <div class="pi-eye" th:text="'CUSTOMER · #' + ${customer.id}">CUSTOMER · #001</div>
+      <div class="pi-name" th:text="${customer.name}">Sumanth Kumar</div>
+      <div class="chips">
+        <span class="chip ct">✉️ <span th:text="${customer.email}">email</span></span>
+        <span class="chip cg">📱 <span th:text="${customer.mobile}">mobile</span></span>
+        <span class="chip cv">🎂 <span th:text="${customer.age} + ' yrs'">30 yrs</span></span>
+        <span class="chip cm" th:if="${customer.address != null and !#strings.isEmpty(customer.address)}">📍 <span th:text="${#strings.abbreviate(customer.address,28)}">Addr</span></span>
+        <span class="chip cm" th:if="${customer.creationdate != null and !#strings.isEmpty(customer.creationdate)}">📅 <span th:text="${customer.creationdate}">2024</span></span>
+      </div>
+    </div>
+    <div class="pa">
+      <a th:href="@{/updateCustomer(id=${customer.id})}" class="btn btn-primary">✎ Edit Customer</a>
+      <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body-grid">
+  <div>
+    <!-- Identity -->
+    <div class="sec-t">Identity</div>
+    <div class="det-card">
+      <div class="det-hd"><span class="det-hd-icon">👤</span><h3>Personal Information</h3></div>
+      <div class="det-grid">
+        <div class="di"><div class="di-l">Full Name</div><div class="di-v" th:text="${customer.name}">Name</div></div>
+        <div class="di"><div class="di-l">Customer ID</div><div class="di-v mono" th:text="'CRM-' + ${customer.id}">CRM-001</div></div>
+        <div class="di">
+          <div class="di-l">Date of Birth</div>
+          <div class="di-v mono" th:text="${customer.dob}" id="dobVal">1990-01-01</div>
+          <div class="di-s" id="bdaySub">—</div>
+        </div>
+        <div class="di">
+          <div class="di-l">Age</div>
+          <div class="ring-row">
+            <svg width="60" height="60" viewBox="0 0 72 72">
+              <circle class="ring-bg" cx="36" cy="36" r="28"/>
+              <circle class="ring-fg" cx="36" cy="36" r="28" id="ageRing"/>
+              <text class="ring-num" x="36" y="35" th:text="${customer.age}">30</text>
+              <text class="ring-unit" x="36" y="47">YRS</text>
+            </svg>
+            <div>
+              <div class="di-v big" th:text="${customer.age}">30</div>
+              <div class="di-s">Years old</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="sec-t">Contact</div>
+    <div class="det-card">
+      <div class="det-hd"><span class="det-hd-icon">📡</span><h3>Reachability</h3></div>
+      <div class="det-grid">
+        <div class="di full">
+          <div class="di-l">Email</div>
+          <div class="di-v mono">
+            <span class="copyable" th:attr="data-copy=${customer.email}" onclick="doCopy(this,'ef')">
+              <span th:text="${customer.email}">email</span><span class="cico">⎘</span><span class="cflash" id="ef">✓ Copied!</span>
+            </span>
+          </div>
+        </div>
+        <div class="di full">
+          <div class="di-l">Mobile</div>
+          <div class="di-v mono">
+            <span class="copyable" th:attr="data-copy=${customer.mobile}" onclick="doCopy(this,'mf')">
+              <span th:text="${customer.mobile}">mobile</span><span class="cico">⎘</span><span class="cflash" id="mf">✓ Copied!</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="sec-t">Location &amp; Record</div>
+    <div class="det-card">
+      <div class="det-hd"><span class="det-hd-icon">📍</span><h3>Address &amp; Registration</h3></div>
+      <div class="det-grid">
+        <div class="di full">
+          <div class="di-l">Full Address</div>
+          <div class="di-v addr" th:text="${customer.address != null and !#strings.isEmpty(customer.address)} ? ${customer.address} : 'No address on record.'">Address</div>
+        </div>
+        <div class="di">
+          <div class="di-l">Creation Date</div>
+          <div class="di-v mono" th:text="${customer.creationdate != null and !#strings.isEmpty(customer.creationdate)} ? ${customer.creationdate} : '—'">—</div>
+        </div>
+        <div class="di">
+          <div class="di-l">Status</div>
+          <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);color:var(--teal);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:4px">● Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTES / ACTIVITY LOG -->
+    <div class="sec-t">Notes &amp; Activity Log</div>
+    <div class="notes-card">
+      <div class="notes-hd">
+        <div class="notes-hd-l">
+          <span style="font-size:16px">📝</span>
+          <h3>Customer Notes</h3>
+          <span class="note-count" id="noteCount">0</span>
+        </div>
+        <span style="font-size:11px;color:var(--muted)">Stored locally in your browser</span>
+      </div>
+
+      <!-- Composer -->
+      <div class="note-composer" style="flex-direction:column;gap:8px">
+        <div class="note-type-row">
+          <button class="note-type-btn selected" data-type="note" onclick="selectType(this)">📝 Note</button>
+          <button class="note-type-btn" data-type="call" onclick="selectType(this)">📞 Call</button>
+          <button class="note-type-btn" data-type="meeting" onclick="selectType(this)">🤝 Meeting</button>
+          <button class="note-type-btn" data-type="followup" onclick="selectType(this)">🔁 Follow-up</button>
+        </div>
+        <div style="display:flex;gap:10px">
+          <textarea class="note-inp" id="noteInp" placeholder="Add a note about this customer…" onkeydown="noteKeydown(event)"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="addNote()" style="align-self:flex-end">＋ Add</button>
+        </div>
+      </div>
+
+      <!-- Notes list -->
+      <div class="notes-list" id="notesList">
+        <div class="notes-empty" id="notesEmpty">No notes yet. Add your first note above.</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="side-card">
+      <div class="side-hd">Quick Actions</div>
+      <div class="side-body" style="padding:10px 12px">
+        <ul class="qa-list">
+          <li><a th:href="@{/updateCustomer(id=${customer.id})}"><span>✎</span> Edit Customer <span class="qa-arr">›</span></a></li>
+          <li><a href="/showCustomerForm"><span>＋</span> Add New <span class="qa-arr">›</span></a></li>
+          <li><a href="/Customerlist"><span>☰</span> All Customers <span class="qa-arr">›</span></a></li>
+          <li><a href="/exportCustomers"><span>↓</span> Export CSV <span class="qa-arr">›</span></a></li>
+          <li><a href="/dashboard"><span>⊞</span> Dashboard <span class="qa-arr">›</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-hd">Activity Timeline</div>
+      <div class="side-body">
+        <div class="tl">
+          <div class="tl-item"><div class="tl-dot td-r">👁</div><div><div class="tl-t">Profile Viewed</div><div class="tl-s" id="viewTs">Just now</div></div></div>
+          <div class="tl-item"><div class="tl-dot td-t">✓</div><div><div class="tl-t">Record Active</div><div class="tl-s">Status: Active</div></div></div>
+          <div class="tl-item"><div class="tl-dot td-g">📅</div><div><div class="tl-t">Created On</div><div class="tl-s" th:text="${customer.creationdate != null and !#strings.isEmpty(customer.creationdate)} ? ${customer.creationdate} : 'Not set'">—</div></div></div>
+          <div class="tl-item"><div class="tl-dot td-v">🎂</div><div><div class="tl-t">Date of Birth</div><div class="tl-s" th:text="${customer.dob}">—</div></div></div>
+          <div class="tl-item"><div class="tl-dot td-r">📝</div><div><div class="tl-t">Notes Added</div><div class="tl-s" id="noteCountTl">0 notes</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-hd">Record Summary</div>
+      <div class="side-body" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Customer Since</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted2);" th:text="${customer.creationdate != null and !#strings.isEmpty(customer.creationdate)} ? ${customer.creationdate} : 'Not set'">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Data Completeness</div>
+          <div class="cb-wrap"><div class="cb" id="compBar"></div></div>
+          <div class="cb-lbl" id="compLbl">Calculating…</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Record ID</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted2);" th:text="'CRM-' + ${customer.id}">CRM-001</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DANGER ZONE -->
+<div class="danger-wrap">
+  <div class="sec-t" style="margin-bottom:14px">Danger Zone</div>
+  <div class="danger-card">
+    <div class="dz-icon">⚠️</div>
+    <div class="dz-text">
+      <h4>Delete This Customer</h4>
+      <p>Permanently remove <strong th:text="${customer.name}">customer</strong> (ID: <span th:text="'#' + ${customer.id}">001</span>) and all data. Irreversible.</p>
+    </div>
+    <div class="dz-btn">
+      <button class="btn btn-danger" onclick="openDel()">🗑 Delete Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="delModal">
+  <div class="modal">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">Confirm Deletion</div>
+    <p class="modal-body">
+      Permanently delete<br/>
+      <strong th:text="${customer.name}">customer</strong><br/>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)" th:text="'ID: #' + ${customer.id}">ID</span>
+    </p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeDel()">Cancel</button>
+      <a th:href="@{/deleteCustomer(id=${customer.id})}" class="btn btn-danger">Delete Permanently</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast toast-ok" id="toast">✓ Note saved</div>
+
+<script>
+/* ── Theme ── */
+(function(){const t=localStorage.getItem('crmTheme')||'dark';if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeLbl').textContent='☀️ Light';}})();
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');const n=c==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('crmTheme',n);document.getElementById('themeLbl').textContent=n==='light'?'☀️ Light':'🌙 Dark';}
+
+/* ── Delete modal ── */
+function openDel(){document.getElementById('delModal').classList.add('open')}
+function closeDel(){document.getElementById('delModal').classList.remove('open')}
+document.getElementById('delModal').addEventListener('click',e=>{if(e.target===document.getElementById('delModal'))closeDel()});
+
+/* ── Copy ── */
+function doCopy(el,fid){navigator.clipboard.writeText(el.getAttribute('data-copy')).then(()=>{const f=document.getElementById(fid);if(f){f.style.display='inline';setTimeout(()=>f.style.display='none',1800);}});}
+
+/* ── Age ring ── */
+function initRing(){
+  const age=parseInt(document.querySelector('.di-v.big')?.textContent||'0');
+  const ring=document.getElementById('ageRing');
+  if(ring)setTimeout(()=>{ring.style.strokeDashoffset=220-Math.min(age/100,1)*220;},350);
+}
+
+/* ── Birthday countdown ── */
+function initBday(){
+  const txt=document.getElementById('dobVal')?.textContent?.trim();
+  if(!txt||txt==='—')return;
+  try{
+    const dob=new Date(txt),now=new Date();
+    const next=new Date(now.getFullYear(),dob.getMonth(),dob.getDate());
+    if(next<now)next.setFullYear(now.getFullYear()+1);
+    const days=Math.ceil((next-now)/86400000);
+    document.getElementById('bdaySub').textContent=days===0?'🎉 Birthday today!':`Birthday in ${days} day${days!==1?'s':''}`;
+  }catch(e){}
+}
+
+/* ── Completeness ── */
+function initCompleteness(){
+  const dis=document.querySelectorAll('.di');
+  let filled=0;
+  dis.forEach(d=>{const v=d.querySelector('.di-v, .addr')?.textContent?.trim();if(v&&v!=='—'&&v!=='No address on record.')filled++;});
+  const pct=Math.min(Math.round((filled/dis.length)*100),100);
+  setTimeout(()=>{document.getElementById('compBar').style.width=pct+'%';document.getElementById('compLbl').textContent=pct+'% — '+(pct===100?'All fields complete':'Some fields missing');},600);
+}
+
+/* ── NOTES / ACTIVITY LOG ── */
+const CUST_ID=document.getElementById('custId').getAttribute('data-id');
+const NOTE_KEY=`crm_notes_${CUST_ID}`;
+let selectedType='note';
+const TYPE_META={
+  note:{icon:'📝',label:'Note',cls:'nd-note'},
+  call:{icon:'📞',label:'Call',cls:'nd-call'},
+  meeting:{icon:'🤝',label:'Meeting',cls:'nd-meeting'},
+  followup:{icon:'🔁',label:'Follow-up',cls:'nd-followup'},
+  auto:{icon:'⚙️',label:'System',cls:'nd-auto'},
+};
+
+function selectType(btn){
+  document.querySelectorAll('.note-type-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedType=btn.getAttribute('data-type');
+}
+
+function loadNotes(){
+  try{return JSON.parse(localStorage.getItem(NOTE_KEY)||'[]');}catch(e){return[];}
+}
+function saveNotes(notes){localStorage.setItem(NOTE_KEY,JSON.stringify(notes));}
+
+function renderNotes(){
+  const notes=loadNotes();
+  const list=document.getElementById('notesList');
+  const empty=document.getElementById('notesEmpty');
+  const cnt=document.getElementById('noteCount');
+  const tl=document.getElementById('noteCountTl');
+  cnt.textContent=notes.length;
+  tl.textContent=`${notes.length} note${notes.length!==1?'s':''}`;
+
+  if(!notes.length){empty.style.display='block';return;}
+  empty.style.display='none';
+
+  list.innerHTML=notes.slice().reverse().map((n,ri)=>{
+    const i=notes.length-1-ri;
+    const m=TYPE_META[n.type]||TYPE_META.note;
+    return `<div class="note-item" style="animation-delay:${ri*0.04}s">
+      <div class="note-dot ${m.cls}">${m.icon}</div>
+      <div class="note-body" style="flex:1">
+        <div class="note-text">${escHtml(n.text)}</div>
+        <div class="note-meta">
+          <span class="note-time">${n.time}</span>
+          <span class="note-tag">${m.label}</span>
+          <button class="note-del-btn" onclick="deleteNote(${i})" title="Delete note">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+function addNote(){
+  const inp=document.getElementById('noteInp');
+  const text=inp.value.trim();
+  if(!text)return;
+  const notes=loadNotes();
+  notes.push({
+    text,type:selectedType,
+    time:new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  });
+  saveNotes(notes);
+  inp.value='';
+  inp.style.height='42px';
+  renderNotes();
+  // auto-log system event
+  showToast('✓ Note added');
+}
+
+function deleteNote(idx){
+  const notes=loadNotes();
+  notes.splice(idx,1);
+  saveNotes(notes);
+  renderNotes();
+}
+
+function noteKeydown(e){if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();addNote();}}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* ── Auto-log "Profile Viewed" ── */
+function autoLog(){
+  const notes=loadNotes();
+  const ts=new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  notes.push({text:'Profile viewed',type:'auto',time:ts});
+  saveNotes(notes);
+  renderNotes();
+}
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  initRing();initBday();initCompleteness();
+  document.getElementById('viewTs').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  renderNotes();
+  autoLog();
+});
+</script>
+</body>
+</html>
